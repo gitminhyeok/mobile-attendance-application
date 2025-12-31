@@ -1,23 +1,19 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-import os
+from database import initialize_firebase
+from routers import auth, attendance, views
 
 app = FastAPI(title="Magnus Attendance")
 
-# Setup templates (assumes a 'templates' directory exists)
-# templates = Jinja2Templates(directory="templates")
+# Include Routers
+app.include_router(views.router) # Views first to capture root
+app.include_router(auth.router)
+app.include_router(attendance.router)
 
-@app.get("/", response_class=HTMLResponse)
-async def read_root():
-    return """
-    <html>
-        <head>
-            <title>Magnus Attendance</title>
-        </head>
-        <body>
-            <h1>Magnus Attendance App is Running!</h1>
-        </body>
-    </html>
-    """
+# Initialize Firebase on startup
+@app.on_event("startup")
+async def startup_event():
+    initialize_firebase()
+
+# Mount static files (optional for now, but good practice)
+# app.mount("/static", StaticFiles(directory="static"), name="static")

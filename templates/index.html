@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Magnus - 홈{% endblock %}
+
+{% block content %}
+<div class="flex flex-col items-center space-y-8 w-full max-w-md">
+    <h1 class="text-3xl font-bold text-gray-800">Magnus</h1>
+    
+    {% if uid %}
+        <p class="text-lg">안녕하세요, <span class="font-bold">{{ nickname }}</span>님!</p>
+        
+        <!-- Attendance Button Area -->
+        <div class="relative group">
+            {% if already_attended %}
+                <button disabled class="w-64 h-64 rounded-full bg-green-500 shadow-xl flex items-center justify-center cursor-not-allowed">
+                    <div class="text-white text-center">
+                        <p class="text-4xl font-bold">출석 완료</p>
+                        <p class="mt-2 text-sm text-green-100">오늘도 고생하셨습니다!</p>
+                    </div>
+                </button>
+            {% elif time_status == 'closed' %}
+                <button disabled class="w-64 h-64 rounded-full bg-gray-400 shadow-inner flex items-center justify-center cursor-not-allowed">
+                    <div class="text-white text-center">
+                        <p class="text-3xl font-bold">출석 불가</p>
+                        <p class="mt-2 text-sm text-gray-200">{{ time_msg }}</p>
+                    </div>
+                </button>
+            {% elif not is_ip_valid %}
+                <button disabled class="w-64 h-64 rounded-full bg-red-400 shadow-inner flex items-center justify-center cursor-not-allowed">
+                    <div class="text-white text-center">
+                        <p class="text-3xl font-bold">위치 오류</p>
+                        <p class="mt-2 text-sm text-red-100">지정된 와이파이가 아닙니다</p>
+                    </div>
+                </button>
+            {% else %}
+                <!-- Active Button -->
+                <button onclick="doAttendance()" id="attend-btn" class="w-64 h-64 rounded-full bg-blue-500 hover:bg-blue-600 shadow-2xl flex items-center justify-center transition-transform transform active:scale-95">
+                    <div class="text-white text-center">
+                        <p class="text-4xl font-bold">출석하기</p>
+                        <p class="mt-2 text-sm text-blue-100">
+                            {% if time_status == 'late' %}현재 지각 처리됩니다{% else %}지금 출석하세요!{% endif %}
+                        </p>
+                    </div>
+                </button>
+                <div class="absolute inset-0 rounded-full bg-blue-500 opacity-20 animate-ping pointer-events-none"></div>
+            {% endif %}
+        </div>
+
+    {% else %}
+        <!-- Login Button -->
+        <div class="flex flex-col items-center">
+            <p class="mb-4 text-gray-600">출석을 하려면 로그인이 필요합니다.</p>
+            <a href="/login/kakao" class="bg-yellow-400 text-gray-900 font-bold py-3 px-8 rounded-lg shadow-md hover:bg-yellow-300 transition flex items-center">
+                <span class="mr-2">💬</span> 카카오 로그인
+            </a>
+        </div>
+    {% endif %}
+
+    <div class="text-center text-gray-600 mt-4">
+        {% if uid %}
+            <p class="text-xs text-gray-400">내 IP: {{ client_ip }}</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    async function doAttendance() {
+        const btn = document.getElementById('attend-btn');
+        btn.disabled = true;
+        
+        try {
+            const response = await fetch('/attendance', { method: 'POST' });
+            const data = await response.json();
+            
+            if (response.ok) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert("오류: " + data.message);
+                btn.disabled = false;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert("통신 오류가 발생했습니다.");
+            btn.disabled = false;
+        }
+    }
+</script>
+{% endblock %}

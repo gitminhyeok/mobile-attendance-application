@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Magnus Attendance{% endblock %}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 커스텀 스타일이 필요하면 여기에 추가 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col">
+    <main class="flex-grow flex flex-col items-center justify-center p-4">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-lg w-full fixed bottom-0 left-0 border-t border-gray-200">
+        <div class="flex justify-around items-center h-16">
+            <a href="/" class="flex flex-col items-center text-gray-500 hover:text-blue-500">
+                <span class="text-2xl">🏠</span>
+                <span class="text-xs">홈</span>
+            </a>
+            <a href="/my" class="flex flex-col items-center text-gray-500 hover:text-blue-500">
+                <span class="text-2xl">📅</span>
+                <span class="text-xs">내 기록</span>
+            </a>
+            <a href="/ranking" class="flex flex-col items-center text-gray-500 hover:text-blue-500">
+                <span class="text-2xl">🏆</span>
+                <span class="text-xs">순위</span>
+            </a>
+        </div>
+    </nav>
+</body>
+</html>
