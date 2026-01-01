@@ -1,40 +1,124 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" class="scroll-smooth snap-y snap-mandatory h-screen overflow-y-scroll">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Magnus Attendance{% endblock %}</title>
-    <!-- Tailwind CSS CDN -->
+    <title>{% block title %}TEAM MAGNUS{% endblock %}</title>
+    
+    <!-- Google Fonts: Inter & Playfair Display (Elegant & Modern Mix) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        magnus: {
+                            white: '#FFFFFF',
+                            black: '#000000',
+                            gray: '#F5F5F7',
+                            red: '#E63946'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
     <style>
-        /* 커스텀 스타일이 필요하면 여기에 추가 */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #000000;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.02em;
+        }
+        
+        /* Minimalist Navigation Blur */
+        .nav-blur {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .hover-underline {
+            position: relative;
+        }
+        .hover-underline::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: #000;
+            transition: width 0.3s ease;
+        }
+        .hover-underline:hover::after {
+            width: 100%;
         }
     </style>
 </head>
-<body class="bg-gray-100 h-screen flex flex-col">
-    <main class="flex-grow flex flex-col items-center justify-center p-4">
+<body class="antialiased text-black flex flex-col min-h-screen">
+    
+    <!-- Minimal Header -->
+    <header class="fixed top-0 w-full z-50 nav-blur">
+        <div class="max-w-6xl mx-auto px-4 md:px-6">
+            <div class="flex items-center justify-between h-14 md:h-20">
+                <!-- Logo Image -->
+                <div class="cursor-pointer group flex items-center shrink-0" onclick="location.href='/'">
+                    <img src="/static/team-magnus-logo.jpg" alt="MAGNUS LOGO" class="h-8 w-8 md:h-12 md:w-12 object-contain rounded-full border border-gray-100">
+                    <span class="ml-2 md:ml-3 font-bold text-lg md:text-xl tracking-tighter hidden xs:inline">MAGNUS<span class="text-magnus-red">.</span></span>
+                </div>
+                
+                <!-- Navigation Menu (Visible on Mobile with smaller scale) -->
+                <nav class="flex items-center space-x-4 md:space-x-12 ml-4">
+                    <a href="#home" class="text-[10px] md:text-sm font-semibold hover-underline tracking-tight">HOME</a>
+                    {% if uid %}
+                        <a href="#record" class="text-[10px] md:text-sm font-semibold hover-underline tracking-tight">RECORD</a>
+                        <a href="#ranking" class="text-[10px] md:text-sm font-semibold hover-underline tracking-tight">RANKING</a>
+                    {% endif %}
+                    <a href="#about" class="text-[10px] md:text-sm font-semibold hover-underline tracking-tight">ABOUT</a>
+                    
+                    {% if uid %}
+                        <a href="/logout" class="text-[9px] md:text-xs font-bold border-b border-black md:border-b-2 pb-0.5 hover:text-magnus-red hover:border-magnus-red transition-colors shrink-0">LOGOUT</a>
+                    {% else %}
+                        <a href="/login/kakao" class="text-[10px] md:text-sm font-extrabold tracking-tight hover:text-magnus-red transition-colors shrink-0">LOGIN</a>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow pt-20">
         {% block content %}
         {% endblock %}
     </main>
 
-    <!-- Navigation Bar -->
-    <nav class="bg-white shadow-lg w-full fixed bottom-0 left-0 border-t border-gray-200">
-        <div class="flex justify-around items-center h-16">
-            <a href="/" class="flex flex-col items-center text-gray-500 hover:text-blue-500">
-                <span class="text-2xl">🏠</span>
-                <span class="text-xs">홈</span>
-            </a>
-            <a href="/my" class="flex flex-col items-center text-gray-500 hover:text-blue-500">
-                <span class="text-2xl">📅</span>
-                <span class="text-xs">내 기록</span>
-            </a>
-            <a href="/ranking" class="flex flex-col items-center text-gray-500 hover:text-blue-500">
-                <span class="text-2xl">🏆</span>
-                <span class="text-xs">순위</span>
-            </a>
+    <!-- Simple Footer -->
+    <footer class="bg-magnus-gray py-12 border-t border-gray-200 mt-auto">
+        <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-start md:items-center">
+            <div>
+                <span class="font-bold text-2xl tracking-tighter">MAGNUS</span>
+                <p class="mt-2 text-xs text-gray-500 max-w-xs">Consistency is the key to mastery.</p>
+            </div>
+            <div class="mt-8 md:mt-0 text-[10px] text-gray-400 font-medium">
+                © 2025 TEAM MAGNUS.
+            </div>
         </div>
-    </nav>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
 </html>

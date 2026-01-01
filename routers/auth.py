@@ -16,14 +16,21 @@ KAKAO_REDIRECT_URI = os.getenv("KAKAO_REDIRECT_URI")
 
 @router.get("/login/kakao")
 def login_kakao():
-    if not KAKAO_CLIENT_ID:
-        raise HTTPException(status_code=500, detail="Kakao Client ID not configured")
+    client_id = os.getenv("KAKAO_CLIENT_ID")
+    redirect_uri = os.getenv("KAKAO_REDIRECT_URI")
+
+    if not client_id or "your_kakao_client_id" in client_id:
+        print("ERROR: Kakao Client ID is missing or default in .env")
+        raise HTTPException(status_code=500, detail="Server Configuration Error: Kakao Client ID missing.")
     
-    url = f"https://kauth.kakao.com/oauth/authorize?client_id={KAKAO_CLIENT_ID}&redirect_uri={KAKAO_REDIRECT_URI}&response_type=code"
+    url = f"https://kauth.kakao.com/oauth/authorize?client_id={client_id}&redirect_uri={redirect_uri}&response_type=code"
     return RedirectResponse(url)
 
 @router.get("/auth/kakao/callback")
 def kakao_callback(code: str, request: Request, response: Response):
+    client_id = os.getenv("KAKAO_CLIENT_ID")
+    redirect_uri = os.getenv("KAKAO_REDIRECT_URI")
+
     if not code:
         raise HTTPException(status_code=400, detail="Code not found")
     
@@ -31,18 +38,23 @@ def kakao_callback(code: str, request: Request, response: Response):
     token_url = "https://kauth.kakao.com/oauth/token"
     payload = {
         "grant_type": "authorization_code",
-        "client_id": KAKAO_CLIENT_ID,
-        "redirect_uri": KAKAO_REDIRECT_URI,
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
         "code": code,
-        # "client_secret": KAKAO_CLIENT_SECRET
     }
     
     try:
+        print(f"DEBUG: Requesting token with redirect_uri={redirect_uri}")
         token_res = requests.post(token_url, data=payload)
-        token_res.raise_for_status()
+        
+        if token_res.status_code != 200:
+            print(f"ERROR: Token Request Failed. Status: {token_res.status_code}, Body: {token_res.text}")
+            raise HTTPException(status_code=400, detail="Kakao Login Failed (Token)")
+            
         token_json = token_res.json()
         access_token = token_json.get("access_token")
     except Exception as e:
+        print(f"EXCEPTION: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Failed to get access token: {str(e)}")
 
     # 2. Get User Info
@@ -59,8 +71,12 @@ def kakao_callback(code: str, request: Request, response: Response):
     # 3. Process User Data
     kakao_uid = str(user_info.get("id"))
     properties = user_info.get("properties", {})
-    nickname = properties.get("nickname", f"User{kakao_uid}")
-    profile_image = properties.get("profile_image", "")
+    kakao_account = user_info.get("kakao_account", {})
+    profile = kakao_account.get("profile", {})
+    
+    # Try to get nickname from profile (Real Name usually), fallback to properties, then default
+    nickname = profile.get("nickname") or properties.get("nickname") or f"User{kakao_uid}"
+    profile_image = profile.get("profile_image_url") or properties.get("profile_image", "")
     
     # 4. Save/Update in Firebase
     db = get_db()
@@ -68,7 +84,7 @@ def kakao_callback(code: str, request: Request, response: Response):
         user_ref = db.collection("users").document(kakao_uid)
         user_data = {
             "uid": kakao_uid,
-            "nickname": nickname,
+            "nickname": nickname, # Always update nickname
             "profile_image": profile_image,
             "last_login": firestore.SERVER_TIMESTAMP
         }

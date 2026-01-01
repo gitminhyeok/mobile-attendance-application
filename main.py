@@ -15,5 +15,5 @@ app.include_router(attendance.router)
 async def startup_event():
     initialize_firebase()
 
-# Mount static files (optional for now, but good practice)
-# app.mount("/static", StaticFiles(directory="static"), name="static")
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")

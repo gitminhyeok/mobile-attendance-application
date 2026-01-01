@@ -10,6 +10,17 @@ KST = pytz.timezone('Asia/Seoul')
 ALLOWED_IP = os.getenv("ALLOWED_IP", "127.0.0.1") 
 # Example: "211.111.111.111"
 
+def get_client_ip(request):
+    """
+    Extracts the real client IP address, handling proxies (X-Forwarded-For).
+    """
+    x_forwarded_for = request.headers.get("x-forwarded-for")
+    if x_forwarded_for:
+        # X-Forwarded-For: <client>, <proxy1>, <proxy2>
+        ip = x_forwarded_for.split(",")[0].strip()
+        return ip
+    return request.client.host
+
 def check_ip(client_ip: str) -> bool:
     """
     Check if the client IP matches the allowed gym IP.
@@ -17,7 +28,10 @@ def check_ip(client_ip: str) -> bool:
     # For local development, allow localhost
     if client_ip == "127.0.0.1" or client_ip == "::1":
         return True
-    return client_ip == ALLOWED_IP
+    
+    # Check against allowed IP (supports multiple IPs comma separated if needed)
+    allowed_ips = [ip.strip() for ip in ALLOWED_IP.split(",")]
+    return client_ip in allowed_ips
 
 def get_current_kst_time():
     return datetime.now(KST)
@@ -34,7 +48,7 @@ def check_attendance_time():
     
     # Saturday = 5, Sunday = 6
     if weekday not in [5, 6]:
-        return "closed", "오늘은 출석하는 날이 아닙니다 (주말만 가능)."
+        return "closed", "오늘은 훈련일이 아닙니다."
 
     current_time = now.time()
     

@@ -1,52 +1,128 @@
 {% extends "base.html" %}
 
-{% block title %}Magnus - 내 기록{% endblock %}
+{% block title %}MAGNUS - My Record{% endblock %}
 
 {% block content %}
-<div class="w-full max-w-md p-4">
-    <h1 class="text-2xl font-bold text-gray-800 mb-6">📅 내 출석 기록</h1>
-
-    <!-- Summary Card -->
-    <div class="bg-white rounded-xl shadow-md p-6 mb-8 text-center">
-        <h2 class="text-gray-500 text-sm mb-2">{{ current_month }}월 출석률</h2>
-        <div class="relative w-32 h-32 mx-auto flex items-center justify-center">
-             <!-- Circular Progress Placeholder -->
-            <svg class="w-full h-full" viewBox="0 0 36 36">
-                <path class="text-gray-200" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="4" />
-                <path class="text-blue-500" stroke-dasharray="{{ attendance_rate }}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="4" />
-            </svg>
-            <span class="absolute text-3xl font-bold text-blue-600">{{ attendance_rate }}%</span>
+<div class="bg-magnus-gray min-h-screen py-12 px-6">
+    <div class="max-w-5xl mx-auto">
+        <!-- Header Section -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
+            <div>
+                <h2 class="text-xs font-black tracking-widest text-gray-400 uppercase mb-2">My Performance</h2>
+                <h1 class="font-serif text-4xl md:text-5xl">User Dashboard</h1>
+            </div>
+            <div class="mt-4 md:mt-0 text-right">
+                <p class="text-sm font-bold">{{ nickname }}</p>
+                <p class="text-xs text-gray-500">Joined via Kakao</p>
+            </div>
         </div>
-        <p class="mt-4 text-sm text-gray-500">
-            총 <span class="font-bold text-gray-800">{{ valid_days_count }}</span>일 중 
-            <span class="font-bold text-blue-600">{{ attendance_list|length }}</span>일 출석
-        </p>
-    </div>
 
-    <!-- Attendance List -->
-    <div class="space-y-4">
-        <h3 class="text-lg font-semibold text-gray-700">이번 달 상세 내역</h3>
-        {% if attendance_list %}
-            {% for item in attendance_list %}
-            <div class="bg-white rounded-lg shadow-sm p-4 flex justify-between items-center border-l-4 {% if item.status == 'present' %}border-green-500{% else %}border-yellow-500{% endif %}">
-                <div>
-                    <p class="font-bold text-gray-800">{{ item.date }}</p>
-                    <p class="text-xs text-gray-400">{{ item.timestamp.strftime('%H:%M:%S') if item.timestamp else '' }}</p>
+        <!-- 1. Stats Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+            <!-- Total Attendance -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total</span>
+                    <i data-lucide="check-circle-2" class="w-4 h-4 text-black"></i>
                 </div>
-                <div class="text-right">
-                    {% if item.status == 'present' %}
-                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">출석 (+{{ item.point }})</span>
+                <p class="text-3xl font-serif font-bold">{{ total_attendance }}</p>
+                <p class="text-[10px] text-gray-400 mt-1">Check-ins</p>
+            </div>
+
+            <!-- This Month -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">This Month</span>
+                    <i data-lucide="calendar" class="w-4 h-4 text-black"></i>
+                </div>
+                <p class="text-3xl font-serif font-bold">{{ current_month_count }}</p>
+                <p class="text-[10px] text-gray-400 mt-1">In {{ current_month }}</p>
+            </div>
+
+            <!-- Current Streak (Mock Logic for now or Real if implemented) -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Streak</span>
+                    <i data-lucide="flame" class="w-4 h-4 text-magnus-red"></i>
+                </div>
+                <p class="text-3xl font-serif font-bold">{{ current_streak }}</p>
+                <p class="text-[10px] text-gray-400 mt-1">Days in a row</p>
+            </div>
+
+            <!-- Points -->
+            <div class="bg-black text-white p-6 rounded-xl shadow-sm border border-black">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Points</span>
+                    <i data-lucide="trophy" class="w-4 h-4 text-white"></i>
+                </div>
+                <p class="text-3xl font-serif font-bold">{{ total_points }}</p>
+                <p class="text-[10px] text-gray-400 mt-1">Rank Score</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <!-- 2. Attendance History (Heatmap Style) -->
+            <div class="lg:col-span-2">
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 h-full">
+                    <h3 class="font-bold text-lg mb-6 flex items-center">
+                        <i data-lucide="layout-grid" class="w-5 h-5 mr-2"></i> Attendance Log
+                    </h3>
+                    
+                    {% if attendance_list %}
+                        <div class="space-y-4">
+                            {% for item in attendance_list %}
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                <div class="flex items-center">
+                                    <div class="w-2 h-10 {{ 'bg-black' if item.status == 'present' else 'bg-magnus-red' }} rounded-full mr-4"></div>
+                                    <div>
+                                        <p class="font-bold text-sm">{{ item.date }}</p>
+                                        <p class="text-xs text-gray-400">{{ item.timestamp.strftime('%H:%M') }}</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xs font-black tracking-widest uppercase {{ 'text-black' if item.status == 'present' else 'text-magnus-red' }}">
+                                        {{ 'PRESENT' if item.status == 'present' else 'LATE' }}
+                                    </span>
+                                    <p class="text-[10px] text-gray-400">+{{ item.point }} pts</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
                     {% else %}
-                        <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">지각 (+{{ item.point }})</span>
+                        <div class="flex flex-col items-center justify-center h-64 text-gray-400">
+                            <i data-lucide="ghost" class="w-12 h-12 mb-4 opacity-20"></i>
+                            <p class="text-sm">No records yet. Start training!</p>
+                        </div>
                     {% endif %}
                 </div>
             </div>
-            {% endfor %}
-        {% else %}
-            <div class="text-center text-gray-400 py-8">
-                아직 출석 기록이 없습니다.
+
+            <!-- 3. Mini Calendar / Analysis -->
+            <div class="lg:col-span-1">
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 mb-6">
+                    <h3 class="font-bold text-lg mb-6">Monthly Rate</h3>
+                    <div class="flex flex-col items-center py-8">
+                         <!-- Simple Donut Chart using Conic Gradient -->
+                         <div class="relative w-40 h-40 rounded-full flex items-center justify-center mb-6" 
+                              style="background: conic-gradient(black {{ attendance_rate }}%, #f3f4f6 0);">
+                             <div class="w-32 h-32 bg-white rounded-full flex flex-col items-center justify-center">
+                                 <span class="text-3xl font-serif font-bold">{{ attendance_rate }}%</span>
+                                 <span class="text-[10px] text-gray-400 uppercase tracking-widest">Efficiency</span>
+                             </div>
+                         </div>
+                         <p class="text-sm text-gray-600 text-center">
+                             You attended <span class="font-bold text-black">{{ current_month_count }}</span> out of <span class="font-bold text-black">{{ valid_days_count }}</span> available classes this month.
+                         </p>
+                    </div>
+                </div>
+
+                <div class="bg-magnus-red text-white p-8 rounded-2xl shadow-sm">
+                    <h3 class="font-bold text-lg mb-2">Next Class</h3>
+                    <p class="text-3xl font-serif mb-4">Saturday, 13:00</p>
+                    <p class="text-xs opacity-80">Don't miss the next session. Consistency builds champions.</p>
+                </div>
             </div>
-        {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}

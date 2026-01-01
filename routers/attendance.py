@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from database import get_db
-from logic import check_ip, check_attendance_time, get_current_kst_time
+from logic import check_ip, check_attendance_time, get_current_kst_time, get_client_ip
 from firebase_admin import firestore
 import logging
 
@@ -15,10 +15,9 @@ async def mark_attendance(request: Request):
         return JSONResponse(status_code=401, content={"message": "로그인이 필요합니다."})
 
     # 2. Check IP
-    client_ip = request.client.host
+    client_ip = get_client_ip(request)
     if not check_ip(client_ip):
-         # Note: In production behind proxy, use X-Forwarded-For
-         return JSONResponse(status_code=403, content={"message": "지정된 장소(와이파이)가 아닙니다."})
+        return JSONResponse(status_code=403, content={"message": "지정된 장소(와이파이)가 아닙니다."})
 
     # 3. Check Time
     status, message = check_attendance_time()
@@ -45,7 +44,7 @@ async def mark_attendance(request: Request):
         return JSONResponse(status_code=400, content={"message": "이미 오늘 출석을 완료했습니다."})
 
     # 5. Save Attendance
-    point = 10 if status == "open" else 5
+    # point = 10 if status == "open" else 5
     status_text = "present" if status == "open" else "late"
     
     new_attendance = {
@@ -53,12 +52,12 @@ async def mark_attendance(request: Request):
         "date": today_str,
         "timestamp": firestore.SERVER_TIMESTAMP,
         "status": status_text,
-        "point": point
+        # "point": point
     }
     
     db.collection("attendance").add(new_attendance)
     
-    return JSONResponse(status_code=200, content={"message": f"{ '출석' if status == 'open' else '지각' } 처리되었습니다! (+{point}점)"})
+    return JSONResponse(status_code=200, content={"message": f"{ '출석' if status == 'open' else '지각' } 처리되었습니다!"})
 
 @router.get("/attendance/status")
 async def get_status(request: Request):
@@ -66,7 +65,7 @@ async def get_status(request: Request):
     Returns current user's status for the main button
     """
     uid = request.cookies.get("user_uid")
-    client_ip = request.client.host
+    client_ip = get_client_ip(request)
     
     # Basic Checks
     is_ip_valid = check_ip(client_ip)
