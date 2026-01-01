@@ -1,20 +1,11 @@
 from fastapi import APIRouter, Request, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
-from database import get_db
-from logic import check_ip, check_attendance_time, get_current_kst_time
-from datetime import datetime, timedelta
-
-router = APIRouter()
-templates = Jinja2Templates(directory="templates")
-
-from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from database import get_db
 from logic import check_ip, check_attendance_time, get_current_kst_time, get_client_ip
 from datetime import datetime, timedelta
 import calendar
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -109,9 +100,9 @@ def get_calendar_data(db, uid, target_date):
     if db:
         docs = (
             db.collection("attendance")
-            .where("user_id", "==", uid)
-            .where("date", ">=", f"{current_month_prefix}-01")
-            .where("date", "<=", f"{current_month_prefix}-{last_day}")
+            .where(filter=FieldFilter("user_id", "==", uid))
+            .where(filter=FieldFilter("date", ">=", f"{current_month_prefix}-01"))
+            .where(filter=FieldFilter("date", "<=", f"{current_month_prefix}-{last_day}"))
             .stream()
         )
         for doc in docs:
@@ -132,12 +123,15 @@ def get_calendar_data(db, uid, target_date):
     
     # Fill leading empty spaces
     for _ in range(first_day_weekday):
-        calendar_grid.append({"day": "", "status": "empty", "is_class": False})
+        calendar_grid.append({"day": "", "status": "empty", "is_class": False, "is_today": False})
         
+    now_date = datetime.now().date() # Local server time, or KST if preferred
+    
     for day in range(1, last_day + 1):
         d = datetime(year, month, day)
         is_weekend = d.weekday() in [5, 6] # Sat, Sun
         status = attendance_map.get(day, "none")
+        is_today = (d.date() == now_date)
         
         cell_status = "weekday" # Default
         if is_weekend:
@@ -151,7 +145,8 @@ def get_calendar_data(db, uid, target_date):
         calendar_grid.append({
             "day": day,
             "status": cell_status, 
-            "is_class": is_weekend
+            "is_class": is_weekend,
+            "is_today": is_today
         })
         
     return calendar_grid
@@ -234,7 +229,7 @@ async def read_root(request: Request): # Removed query params from root
         # For simplicity in this edit, let's keep the logic or simplified query.
         
         # Calculate totals from ALL history stream
-        docs = db.collection("attendance").where("user_id", "==", uid).stream()
+        docs = db.collection("attendance").where(filter=FieldFilter("user_id", "==", uid)).stream()
         
         for doc in docs:
             data = doc.to_dict()
@@ -280,15 +275,18 @@ async def read_root(request: Request): # Removed query params from root
     }
     
     if uid and db:
-        # Get Nickname
+        # Get Nickname from DB (Latest)
         user_doc = db.collection("users").document(uid).get()
         if user_doc.exists:
-            nickname = user_doc.to_dict().get("nickname")
+            user_data = user_doc.to_dict()
+            nickname = user_data.get("nickname", "Unknown Warrior")
+        else:
+            nickname = "Unknown Warrior"
             
         # Get Attendance History
         docs = (
             db.collection("attendance")
-            .where("user_id", "==", uid)
+            .where(filter=FieldFilter("user_id", "==", uid))
             .order_by("date", direction="DESCENDING")
             .stream()
         )
@@ -393,10 +391,12 @@ async def read_my_attendance(request: Request):
 
         # Fetch ALL attendance for this user to calculate detailed stats
         # Optimization: In a real app, aggregation queries or stored counters on the user doc are better.
-        docs = db.collection("attendance")\
-            .where("user_id", "==", uid)\
-            .order_by("date", direction="DESCENDING")\
+        docs = (
+            db.collection("attendance")
+            .where(filter=FieldFilter("user_id", "==", uid))
+            .order_by("date", direction="DESCENDING")
             .stream()
+        )
             
         now = get_current_kst_time()
         current_month_prefix = now.strftime("%Y-%m")

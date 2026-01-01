@@ -4,6 +4,7 @@ from database import get_db
 from logic import check_ip, check_attendance_time, get_current_kst_time, get_client_ip
 from firebase_admin import firestore
 import logging
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 router = APIRouter()
 
@@ -34,8 +35,8 @@ async def mark_attendance(request: Request):
     # Query: attendance where user_id == uid and date == today
     docs = (
         db.collection("attendance")
-        .where("user_id", "==", uid)
-        .where("date", "==", today_str)
+        .where(filter=FieldFilter("user_id", "==", uid))
+        .where(filter=FieldFilter("date", "==", today_str))
         .limit(1)
         .stream()
     )
@@ -78,8 +79,8 @@ async def get_status(request: Request):
             today_str = get_current_kst_time().strftime("%Y-%m-%d")
             docs = (
                 db.collection("attendance")
-                .where("user_id", "==", uid)
-                .where("date", "==", today_str)
+                .where(filter=FieldFilter("user_id", "==", uid))
+                .where(filter=FieldFilter("date", "==", today_str))
                 .limit(1)
                 .stream()
             )

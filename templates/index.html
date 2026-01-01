@@ -60,8 +60,7 @@
         <!-- Dashboard Header -->
         <div class="flex flex-col md:flex-row md:items-end justify-between mb-16">
             <div>
-                <h2 class="text-xs font-black tracking-widest text-magnus-red uppercase mb-4">My Dashboard</h2>
-                <h3 class="font-serif text-5xl md:text-6xl leading-tight">Hello,<br/>{{ nickname }}.</h3>
+                <h3 class="font-serif text-4xl md:text-5xl leading-tight font-bold">안녕하세요,<br/>{{ nickname }}님.</h3>
             </div>
             
             <!-- Monthly Rate Donut Chart -->
@@ -73,7 +72,7 @@
                     </div>
                 </div>
                 <div class="text-left">
-                    <p class="text-lg font-bold">Monthly Efficiency</p>
+                    <p class="text-lg font-bold">이달의 출석률</p>
                     <p class="text-xs text-gray-400 uppercase tracking-widest">{{ my_record.current_month_count }} / {{ valid_days_count }} Classes</p>
                 </div>
             </div>
@@ -83,12 +82,12 @@
             <!-- Stats Cards -->
             <div class="lg:col-span-1 flex flex-col gap-6">
                 <div class="bg-white p-8 border border-gray-200 shadow-sm flex-1 flex flex-col justify-center">
-                    <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Total Classes</p>
+                    <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">총 수업</p>
                     <p class="text-6xl font-serif font-bold">{{ my_record.total_attendance }}</p>
                     <p class="text-sm text-gray-500 mt-2">Check-ins since joined</p>
                 </div>
                 <div class="bg-black text-white p-8 shadow-sm flex-1 flex flex-col justify-center">
-                     <p class="text-xs font-black text-gray-500 uppercase tracking-widest mb-4">Current Streak</p>
+                     <p class="text-xs font-black text-gray-500 uppercase tracking-widest mb-4">연속 출석 기록</p>
                      <p class="text-5xl font-serif">{{ my_record.current_streak }}</p>
                      <p class="text-xs text-gray-500 mt-2">Classes in a row</p>
                 </div>
@@ -125,6 +124,7 @@
                                 <div class="aspect-square"></div>
                             {% else %}
                                 <div class="aspect-square rounded-md flex items-center justify-center text-xs font-bold transition-transform hover:scale-110 
+                                    {% if day.is_today %} border-2 border-blue-500 {% endif %}
                                     {% if day.status == 'present' %} bg-black text-white
                                     {% elif day.status == 'late' %} bg-magnus-red text-white
                                     {% elif day.status == 'absent' %} bg-gray-200 text-gray-400
@@ -153,8 +153,8 @@
 <section id="ranking" class="min-h-screen py-32 px-6 flex items-center snap-start">
     <div class="max-w-5xl mx-auto w-full">
         <div class="text-center mb-12">
-            <h2 class="text-xs font-black tracking-widest text-magnus-red uppercase mb-4">Leaderboard</h2>
-            <h3 class="font-serif text-5xl md:text-6xl mb-8">Hall of Fame</h3>
+            <!-- <h2 class="text-xs font-black tracking-widest text-magnus-red uppercase mb-4">Leaderboard</h2> -->
+            <h3 class="font-serif text-5xl md:text-6xl mb-8">Ranking</h3>
             
             <!-- Month Navigation -->
             <div class="flex items-center justify-center space-x-8 border-b border-black pb-2 select-none w-full max-w-md mx-auto">
@@ -172,9 +172,9 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="border-b-2 border-black">
-                        <th class="py-4 text-xs font-black uppercase tracking-widest w-16 text-center">Rank</th>
-                        <th class="py-4 text-xs font-black uppercase tracking-widest pl-4">Name</th>
-                        <th class="py-4 text-xs font-black uppercase tracking-widest text-right pr-4">Performance</th>
+                        <th class="py-4 text-xs font-black uppercase tracking-widest w-16 text-center">순위</th>
+                        <th class="py-4 text-xs font-black uppercase tracking-widest pl-4">이름</th>
+                        <th class="py-4 text-xs font-black uppercase tracking-widest text-right pr-4">출석률</th>
                     </tr>
                 </thead>
                 <tbody id="ranking-tbody" class="divide-y divide-gray-100">
@@ -214,23 +214,33 @@
 <section id="about" class="py-32 bg-black text-white px-6 snap-start">
     <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
         <div>
-            <h2 class="font-serif text-5xl md:text-6xl mb-8 leading-tight">The <br/>Philosophy.</h2>
-            <p class="text-gray-400 leading-relaxed max-w-md mb-8">
-                Magnus is not just a name; it's a commitment to technical excellence and unwavering consistency. We believe that showing up is the first step toward greatness.
+            <h2 class="font-serif text-4xl md:text-5xl mb-8 leading-tight">마그누스는</h2>
+            <p class="font-serif text-gray-400 leading-relaxed max-w-md mb-8">
+                기존 부원 뿐만 아니라 신입부원들도 함께 운동을 하고 있습니다. <br/>
+                블루-퍼플 벨트 이상의 코치진이 훈련을 진행하고 있습니다. <br/>
+                추가로 3층에 위치한 헬스장을 무료로 이용하실 수 있습니다. <br/>
+                훈련 후 재미있는 뒷풀이가 종종 있습니다!
             </p>
             <div class="grid grid-cols-2 gap-8">
                 <div>
                     <h4 class="text-xs font-black tracking-widest text-magnus-red mb-2">LOCATION</h4>
-                    <p class="text-sm font-bold">SEOUL, KOREA<br/>MAGNUS MAIN GYM</p>
+                    <p class="font-serif text-sm">서울 중구 서애로1길 10 3-4층<br/>러쉬클랜 충무로점</p>
                 </div>
                 <div>
                     <h4 class="text-xs font-black tracking-widest text-magnus-red mb-2">SCHEDULE</h4>
-                    <p class="text-sm font-bold">SAT 13:00 / SUN 16:00</p>
+                    <p class="text-sm">SAT 13:00 / SUN 16:00</p>
                 </div>
             </div>
         </div>
-        <div class="h-96 bg-gray-900 border border-gray-800 flex items-center justify-center">
-             <span class="text-gray-600 font-serif italic text-2xl">Gym Map / Image Placeholder</span>
+        <div class="h-96 bg-gray-900 border border-gray-800 flex items-center justify-center relative">
+            <span class="text-gray-600 font-serif italic text-2xl">Gym Map / Image Placeholder</span>
+            
+            <!-- Discrete UID for Admin reference -->
+            {% if uid %}
+            <div class="absolute bottom-2 right-4 text-[8px] text-gray-800 select-all opacity-30 hover:opacity-100 transition-opacity">
+                REF_{{ uid }}
+            </div>
+            {% endif %}
         </div>
     </div>
 </section>
@@ -266,11 +276,23 @@
             const grid = document.getElementById('calendar-grid');
             grid.innerHTML = '';
             data.calendar_grid.forEach(day => {
-                let cellClass = "bg-gray-50 text-gray-200";
+                let cellClass = "bg-gray-50 text-gray-200"; // Default weekday
+                let borderClass = day.is_today ? "border-2 border-blue-500" : "";
+                
                 if (day.status === 'present') cellClass = "bg-black text-white";
                 else if (day.status === 'late') cellClass = "bg-magnus-red text-white";
                 else if (day.status === 'absent') cellClass = "bg-gray-200 text-gray-400";
-                let html = (day.status === 'empty') ? `<div class="aspect-square"></div>` : `<div class="aspect-square rounded-md flex items-center justify-center text-xs font-bold transition-transform hover:scale-110 ${cellClass}">${day.day}</div>`;
+                
+                let html = '';
+                if (day.status === 'empty') {
+                    html = `<div class="aspect-square"></div>`;
+                } else {
+                    html = `
+                        <div class="aspect-square rounded-md flex items-center justify-center text-xs font-bold transition-transform hover:scale-110 ${cellClass} ${borderClass}">
+                            ${day.day}
+                        </div>
+                    `;
+                }
                 grid.innerHTML += html;
             });
             const nextBtn = document.getElementById('record-next-btn');
@@ -297,7 +319,7 @@
             const tbody = document.getElementById('ranking-tbody');
             tbody.innerHTML = '';
             if (data.ranking_list.length === 0) {
-                 tbody.innerHTML = `<tr><td colspan="3" class="py-12 text-center text-gray-400">No data available for this month.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="3" class="py-12 text-center text-gray-400">No data available for this month.</td></tr>`;
             } else {
                 data.ranking_list.forEach(item => {
                     const row = `

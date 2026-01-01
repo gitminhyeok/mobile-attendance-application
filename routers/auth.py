@@ -70,14 +70,16 @@ def kakao_callback(code: str, request: Request, response: Response):
 
     # 3. Process User Data
     kakao_uid = str(user_info.get("id"))
-    properties = user_info.get("properties", {})
     kakao_account = user_info.get("kakao_account", {})
     profile = kakao_account.get("profile", {})
+    properties = user_info.get("properties", {})
     
-    # Try to get nickname from profile (Real Name usually), fallback to properties, then default
+    # Priority: Profile Nickname (Real) > Properties Nickname > Default
     nickname = profile.get("nickname") or properties.get("nickname") or f"User{kakao_uid}"
     profile_image = profile.get("profile_image_url") or properties.get("profile_image", "")
     
+    print(f"DEBUG: Logged in as {nickname} ({kakao_uid})")
+
     # 4. Save/Update in Firebase
     db = get_db()
     if db:
