@@ -58,25 +58,25 @@
 <section id="record" class="min-h-screen py-32 px-6 bg-magnus-gray flex items-center snap-start">
     <div class="max-w-6xl mx-auto w-full">
         <!-- Dashboard Header -->
-        <div class="flex flex-col md:flex-row md:items-end justify-between mb-16">
-            <div>
+        <div class="mb-16">
+            <div class="flex flex-row items-center justify-between gap-4 md:justify-start md:gap-12">
                 <h3 class="text-4xl md:text-5xl leading-tight font-bold">안녕하세요,<br/>{{ nickname }}님.</h3>
-                <p class="mt-4 text-lg font-bold tracking-tight {{ status_color }}">{{ status_message }}</p>
-            </div>
-            
-            <!-- Monthly Rate Donut Chart -->
-            <div class="mt-8 md:mt-0 flex items-center">
-                <div class="relative w-24 h-24 rounded-full flex items-center justify-center mr-6"
-                    style="background: conic-gradient(black {{ my_record.attendance_rate }}%, #e5e7eb 0);">
-                    <div class="w-20 h-20 bg-magnus-gray rounded-full flex items-center justify-center">
-                        <span class="text-2xl font-bold">{{ my_record.attendance_rate }}%</span>
+                
+                <!-- Monthly Rate Donut Chart -->
+                <div class="flex items-center shrink-0">
+                    <div class="relative w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center mr-2 md:mr-4 shadow-sm"
+                        style="background: conic-gradient(black {{ my_record.attendance_rate }}%, #e5e7eb 0);">
+                        <div class="w-12 h-12 md:w-16 md:h-16 bg-magnus-gray rounded-full flex items-center justify-center">
+                            <span class="text-sm md:text-lg font-bold">{{ my_record.attendance_rate }}%</span>
+                        </div>
+                    </div>
+                    <div class="text-left">
+                        <p class="text-lg md:text-base font-bold">이달의 출석률</p>
+                        <p class="text-[14px] md:text-[18px] text-gray-400 uppercase tracking-widest">{{ my_record.current_month_count }} / {{ valid_days_count }} <span class="hidden md:inline">Classes</span></p>
                     </div>
                 </div>
-                <div class="text-left">
-                    <p class="text-lg font-bold">이달의 출석률</p>
-                    <p class="text-xs text-gray-400 uppercase tracking-widest">{{ my_record.current_month_count }} / {{ valid_days_count }} Classes</p>
-                </div>
             </div>
+            <p class="mt-6 text-base md:text-lg font-bold tracking-tight {{ status_color }}">{{ status_message }}</p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
