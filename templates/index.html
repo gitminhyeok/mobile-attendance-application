@@ -21,7 +21,7 @@
                         <div class="w-16 h-16 rounded-full border-2 border-black flex items-center justify-center">
                             <i data-lucide="check" class="w-8 h-8"></i>
                         </div>
-                        <p class="font-bold text-sm tracking-widest uppercase">Check-in Complete</p>
+                        <p class="font-bold text-2xl tracking-widest uppercase">출석 완료</p>
                     </div>
                 {% elif time_status == 'closed' %}
                     <div class="border-t border-b border-black py-4 px-10">
@@ -29,13 +29,13 @@
                     </div>
                 {% elif not is_ip_valid %}
                     <div class="bg-black text-white py-4 px-12 rounded-full cursor-not-allowed opacity-50">
-                        <span class="text-xs font-black tracking-widest flex items-center gap-2">WIFI REQUIRED</span>
+                        <span class="text-xs font-black tracking-widest flex items-center gap-2">와이파이에 연결해주세요.</span>
                     </div>
                 {% else %}
                     <button onclick="doAttendance()" id="attend-btn" class="group relative px-16 py-6 bg-black text-white overflow-hidden transition-all hover:pr-20">
-                        <span class="relative z-10 text-sm font-black tracking-[0.2em]">CHECK IN NOW</span>
+                        <span class="relative z-10 text-sm font-black tracking-[0.2em]">출석하기</span>
                         <div class="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 transition-all group-hover:opacity-100 group-hover:right-8">
-                             <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                            <i data-lucide="arrow-right" class="w-5 h-5"></i>
                         </div>
                     </button>
                 {% endif %}
@@ -82,21 +82,21 @@
             <!-- Stats Cards -->
             <div class="lg:col-span-1 flex flex-col gap-6">
                 <div class="bg-white p-8 border border-gray-200 shadow-sm flex-1 flex flex-col justify-center">
-                    <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">총 수업</p>
-                    <p class="text-6xl font-serif font-bold">{{ my_record.total_attendance }}</p>
-                    <p class="text-sm text-gray-500 mt-2">Check-ins since joined</p>
+                    <p class="text-l text-gray-500 tracking-widest mb-4">총 수업 중</p>
+                    <p class="text-5xl font-bold">{{ my_record.total_attendance }} 번</p>
+                    <p class="text-m text-gray-500 mt-2">참여하셨습니다.</p>
                 </div>
                 <div class="bg-black text-white p-8 shadow-sm flex-1 flex flex-col justify-center">
-                     <p class="text-xs font-black text-gray-500 uppercase tracking-widest mb-4">연속 출석 기록</p>
-                     <p class="text-5xl font-serif">{{ my_record.current_streak }}</p>
-                     <p class="text-xs text-gray-500 mt-2">Classes in a row</p>
+                     <p class="text-m text-gray-500 tracking-widest mb-4">연속으로는</p>
+                     <p class="text-5xl">{{ my_record.current_streak }} 번</p>
+                     <p class="text-m text-gray-500 mt-2">참여하셨습니다.</p>
                 </div>
             </div>
 
             <!-- Calendar Heatmap -->
             <div class="lg:col-span-2 bg-white border border-gray-200 p-8">
                 <div class="flex items-center justify-between mb-8 border-b border-black pb-4">
-                    <h4 class="text-sm font-black uppercase tracking-widest">Training Log</h4>
+                    <h4 class="text-sm font-bold uppercase tracking-widest">Training Log</h4>
                     <div class="flex items-center space-x-6 select-none">
                         <button onclick="changeRecordMonth(-1)" class="focus:outline-none hover:text-magnus-red transition">
                             <i data-lucide="chevron-left" class="w-5 h-5"></i>
@@ -154,7 +154,7 @@
     <div class="max-w-5xl mx-auto w-full">
         <div class="text-center mb-12">
             <!-- <h2 class="text-xs font-black tracking-widest text-magnus-red uppercase mb-4">Leaderboard</h2> -->
-            <h3 class="font-serif text-5xl md:text-6xl mb-8">Ranking</h3>
+            <h3 class="font-bold text-5xl md:text-6xl mb-8">Ranking</h3>
             
             <!-- Month Navigation -->
             <div class="flex items-center justify-center space-x-8 border-b border-black pb-2 select-none w-full max-w-md mx-auto">
@@ -172,21 +172,28 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="border-b-2 border-black">
-                        <th class="py-4 text-xs font-black uppercase tracking-widest w-16 text-center">순위</th>
-                        <th class="py-4 text-xs font-black uppercase tracking-widest pl-4">이름</th>
-                        <th class="py-4 text-xs font-black uppercase tracking-widest text-right pr-4">출석률</th>
+                        <!-- <th class="py-4 text-m font-black tracking-widest w-16 text-center">순위</th>
+                        <th class="py-4 text-m font-black tracking-widest pl-4">이름</th>
+                        <th class="py-4 text-m font-black tracking-widest text-right pr-4">출석률</th> -->
                     </tr>
                 </thead>
                 <tbody id="ranking-tbody" class="divide-y divide-gray-100">
                     {% if ranking_list %}
                         {% for item in ranking_list %}
                         <tr class="group hover:bg-gray-50 transition-colors {{ 'bg-gray-50' if item.is_me else '' }} animate-[fadeIn_0.3s_ease-out]">
-                            <td class="py-5 font-serif text-xl italic text-gray-400 group-hover:text-black text-center">
-                                #{{ item.rank }}
+                            <td class="py-5 font-serif text-xl font-bold text-black text-center">
+                                {{ item.rank }}
                             </td>
                             <td class="py-5 pl-4">
-                                <span class="font-bold text-lg {{ 'text-magnus-red' if item.is_me else '' }}">{{ item.nickname }}</span>
-                                {% if item.is_me %}<span class="ml-2 text-[10px] bg-black text-white px-1.5 py-0.5 rounded align-middle">ME</span>{% endif %}
+                                <div class="flex items-center">
+                                    <img src="{{ item.profile_image if item.profile_image else 'https://ui-avatars.com/api/?name=' + item.nickname + '&background=random' }}" 
+                                         alt="{{ item.nickname }}" 
+                                         class="w-10 h-10 rounded-full object-cover mr-3 border border-gray-200 shadow-sm bg-gray-100">
+                                    <div>
+                                        <span class="font-bold text-lg {{ 'text-magnus-red' if item.is_me else '' }}">{{ item.nickname }}</span>
+                                        {% if item.is_me %}<span class="ml-2 text-[10px] bg-black text-white px-1.5 py-0.5 rounded align-middle">ME</span>{% endif %}
+                                    </div>
+                                </div>
                             </td>
                             <td class="py-5 flex justify-end items-center pr-4">
                                 <div class="flex flex-col items-end mr-3">
@@ -214,12 +221,14 @@
 <section id="about" class="py-32 bg-black text-white px-6 snap-start">
     <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
         <div>
-            <h2 class="font-serif text-4xl md:text-5xl mb-8 leading-tight">마그누스는</h2>
-            <p class="font-serif text-gray-400 leading-relaxed max-w-md mb-8">
-                기존 부원 뿐만 아니라 신입부원들도 함께 운동을 하고 있습니다. <br/>
-                블루-퍼플 벨트 이상의 코치진이 훈련을 진행하고 있습니다. <br/>
-                추가로 3층에 위치한 헬스장을 무료로 이용하실 수 있습니다. <br/>
-                훈련 후 재미있는 뒷풀이가 종종 있습니다!
+            <h2 class="font-serif text-3xl md:text-4xl mb-8 leading-tight">마그누스는</h2>
+            <p class="font-serif text-gray-350 leading-relaxed max-w-md mb-8">
+                대학생 연합 동아리로, 2022년부터 함께 운동하고 있습니다. <br/>
+                블루-퍼플 벨트 이상의 코치진이 훈련을 지도합니다. <br/>
+                매주 2회 수업과 스파링이 진행됩니다. <br/>
+                매달 마지막은 오픈 매트가 진행됩니다. <br/> <br/>
+                샤워장과 수건이 제공되며, <br/>
+                3층에 위치한 헬스장도 이용하실 수 있습니다. <br/>
             </p>
             <div class="grid grid-cols-2 gap-8">
                 <div>
@@ -232,18 +241,55 @@
                 </div>
             </div>
         </div>
-        <div class="h-96 bg-gray-900 border border-gray-800 flex items-center justify-center relative">
-            <span class="text-gray-600 font-serif italic text-2xl">Gym Map / Image Placeholder</span>
+        <div id="map" class="h-96 bg-gray-900 border border-gray-800 flex items-center justify-center relative">
+            {% if not kakao_js_key %}
+                <span class="text-gray-600 font-serif italic text-xl p-4 text-center">
+                    Map Unavailable<br/>
+                    <span class="text-sm not-italic font-sans text-gray-700 mt-2 block">
+                        Please add <code>KAKAO_JS_KEY</code> to .env
+                    </span>
+                </span>
+            {% endif %}
             
             <!-- Discrete UID for Admin reference -->
             {% if uid %}
-            <div class="absolute bottom-2 right-4 text-[8px] text-gray-800 select-all opacity-30 hover:opacity-100 transition-opacity">
+            <div class="absolute bottom-2 right-4 text-[8px] text-gray-800 select-all opacity-30 hover:opacity-100 transition-opacity z-10">
                 REF_{{ uid }}
             </div>
             {% endif %}
         </div>
     </div>
 </section>
+
+<!-- Kakao Map Script -->
+{% if kakao_js_key %}
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_js_key }}"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var container = document.getElementById('map');
+        var options = {
+            center: new kakao.maps.LatLng(37.55998, 126.99537), // Rush Clan Chungmuro
+            level: 3
+        };
+
+        var map = new kakao.maps.Map(container, options);
+
+        // Marker Position
+        var markerPosition  = new kakao.maps.LatLng(37.55998, 126.99537); 
+
+        // Create Marker
+        var marker = new kakao.maps.Marker({
+            position: markerPosition
+        });
+
+        marker.setMap(map);
+        
+        // Add zoom control
+        var zoomControl = new kakao.maps.ZoomControl();
+        map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+    });
+</script>
+{% endif %}
 
 <style>
     @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
@@ -322,10 +368,19 @@
                 tbody.innerHTML = `<tr><td colspan="3" class="py-12 text-center text-gray-400">No data available for this month.</td></tr>`;
             } else {
                 data.ranking_list.forEach(item => {
+                    let profileImg = item.profile_image ? item.profile_image : `https://ui-avatars.com/api/?name=${item.nickname}&background=random`;
                     const row = `
                         <tr class="group hover:bg-gray-50 transition-colors ${item.is_me ? 'bg-gray-50' : ''} animate-[fadeIn_0.3s_ease-out]">
-                            <td class="py-5 font-serif text-xl italic text-gray-400 group-hover:text-black text-center">#${item.rank}</td>
-                            <td class="py-5 pl-4"><span class="font-bold text-lg ${item.is_me ? 'text-magnus-red' : ''}">${item.nickname}</span>${item.is_me ? '<span class="ml-2 text-[10px] bg-black text-white px-1.5 py-0.5 rounded align-middle">ME</span>' : ''}</td>
+                            <td class="py-5 font-serif text-xl font-bold text-black text-center">${item.rank}</td>
+                            <td class="py-5 pl-4">
+                                <div class="flex items-center">
+                                    <img src="${profileImg}" alt="${item.nickname}" class="w-10 h-10 rounded-full object-cover mr-3 border border-gray-200 shadow-sm bg-gray-100">
+                                    <div>
+                                        <span class="font-bold text-lg ${item.is_me ? 'text-magnus-red' : ''}">${item.nickname}</span>
+                                        ${item.is_me ? '<span class="ml-2 text-[10px] bg-black text-white px-1.5 py-0.5 rounded align-middle">ME</span>' : ''}
+                                    </div>
+                                </div>
+                            </td>
                             <td class="py-5 flex justify-end items-center pr-4">
                                 <div class="flex flex-col items-end mr-3">
                                     <span class="text-sm font-bold">${item.rate}%</span>

@@ -1,52 +1,98 @@
-# Project: Magnus Attendance App (PRD)
+# Magnus Attendance Application
 
-## 1. 프로젝트 개요 (Overview)
-- **프로젝트명**: Magnus (매그너스)
-- **목표**: 특정 장소(와이파이/IP 기준) 및 특정 시간(주말)에만 출석이 가능한 모바일 중심의 웹 어플리케이션 개발.
-- **플랫폼**: 모바일 웹 (반응형 웹 어플리케이션).
-- **주요 기능**: 카카오 로그인, 조건부 출석 체크, 월별 출석률 확인, 전체 순위 확인.
+Magnus 팀을 위한 위치 및 시간 기반 모바일 출석 체크 어플리케이션입니다.  
+FastAPI와 Firebase를 기반으로 구축되었으며, 특정 WiFi(IP)와 훈련 시간(주말)에만 출석이 가능하도록 설계되었습니다.
 
-## 2. 기술 스택 (Tech Stack)
-- **Language**: Python 3.10+
-- **Backend Framework**: FastAPI
-  - 비동기 처리 및 빠른 API 응답.
-  - Jinja2Templates를 사용하여 프론트엔드 렌더링.
-- **Database**: Google Firebase (Firestore)
-  - NoSQL 기반.
-- **Authentication**: Kakao OAuth 2.0
-  - REST API 방식, 세션 또는 JWT 발급.
-- **Frontend**: HTML5, CSS3 (Tailwind CSS)
-  - Tailwind CDN 활용.
-- **Deployment**: 로컬 개발 (추후 클라우드 배포).
+## ✨ 주요 기능 (Features)
 
-## 3. 핵심 기능 명세 (Functional Requirements)
+- **📍 위치 기반 출석 체크**: 체육관의 특정 WiFi(공인 IP)에 접속해 있어야만 출석 버튼이 활성화됩니다.
+- **⏰ 시간 제한 로직**: 정해진 훈련 시간(토요일 13시, 일요일 16시) 전후 20분 내에만 출석이 가능하며, 이후 20분간은 지각 처리됩니다.
+- **💬 카카오 로그인**: 별도의 회원가입 절차 없이 카카오 계정으로 간편하게 시작할 수 있습니다.
+- **🏆 랭킹 및 기록**: 자신의 출석 현황을 확인하고 팀원들과 출석 랭킹을 경쟁할 수 있습니다.
+- **🛡️ 관리자 대시보드**: 운영진은 장기 결석자(경고/제적 대상)를 실시간으로 파악할 수 있습니다.
 
-### 3.1. 인증 (Authentication)
-- **카카오 로그인**: 원클릭 가입/로그인.
-- **세션 유지**: 쿠키/세션.
-- **사용자 정보 저장**: Firebase users 컬렉션 (UID, 닉네임, 프로필 사진).
+## 🛠️ 기술 스택 (Tech Stack)
 
-### 3.2. 출석 체크 로직 (Business Logic)
-- **위치 제한**: 공인 IP(Public IP) 대조 방식. 서버에서 클라이언트 요청 IP 확인.
-- **시간 제한 (KST 기준)**:
-  - **토요일**: 13:00 기준 (출석: 12:50~13:10, 지각: 13:10:01~13:30)
-  - **일요일**: 16:00 기준 (출석: 15:50~16:10, 지각: 16:10:01~16:30)
-  - 그 외: 출석 불가.
+- **Backend**: Python (FastAPI), Uvicorn
+- **Database**: Google Firestore (NoSQL)
+- **Frontend**: HTML5, Jinja2 Templates, Tailwind CSS
+- **Auth**: Kakao OAuth 2.0
+- **Deployment**: Local / Cloud capable
 
-### 3.3. 데이터베이스 스키마 (Firestore)
-- **Users**: `uid` (PK), `nickname`, `created_at`
-- **Attendance**: `id` (Auto), `user_id` (FK), `date` (YYYY-MM-DD), `timestamp`, `status` (present/late), `point`
+## 🚀 시작하기 (Getting Started)
 
-## 4. UI/UX 디자인 가이드 (Minimalist)
-- **공통**: 세로형 레이아웃, 하단 네비게이션 바.
-- **Tool**: Tailwind CSS.
-- **메인 페이지**: 중앙 거대 버튼 (활성/비활성/완료 상태).
-- **내 기록**: 이번 달 출석률, 달력/리스트.
-- **순위**: 이번 달 기준 출석 횟수/점수 랭킹.
+### 1. 사전 요구사항 (Prerequisites)
+- Python 3.10 이상
+- Google Firebase 프로젝트 및 인증 키 (`serviceAccountKey.json`)
+- Kakao Developers 앱 키 (REST API Key)
 
-## 5. 개발 단계 (Development Roadmap)
-- [ ] **Phase 1 (환경 설정)**: FastAPI 프로젝트 생성, Firebase 연동, 카카오 앱 등록.
-- [ ] **Phase 2 (인증)**: 카카오 로그인, DB 저장.
-- [ ] **Phase 3 (핵심 로직)**: IP 및 시간 체크 구현.
-- [ ] **Phase 4 (UI 연동)**: Jinja2 + Tailwind 페이지 구현.
-- [ ] **Phase 5 (테스트)**: 시나리오 테스트.
+### 2. 설치 (Installation)
+
+레포지토리를 클론하고 필요한 패키지를 설치합니다.
+
+```bash
+git clone <repository-url>
+cd magnus-attendance-application
+pip install -r requirements.txt
+```
+
+### 3. 환경 변수 설정 (Configuration)
+
+프로젝트 루트에 `.env` 파일을 생성하고 다음 정보를 입력합니다.
+
+```ini
+# .env 파일 예시
+
+# Firebase 설정
+FIREBASE_CRED_PATH="serviceAccountKey.json"  # Firebase 서비스 계정 키 파일 경로
+
+# Kakao OAuth 설정
+KAKAO_REST_API_KEY="your_kakao_rest_api_key"
+KAKAO_REDIRECT_URI="http://localhost:8000/auth/kakao/callback"
+
+# 출석 설정
+ALLOWED_IP="127.0.0.1, 211.xxx.xxx.xxx"  # 허용할 공인 IP 목록 (콤마로 구분)
+
+# 관리자 설정
+ADMIN_UID="1234567890, 0987654321"  # 관리자 권한을 부여할 카카오 UID 목록
+```
+
+### 4. 실행 (Run)
+
+로컬 개발 서버를 실행합니다.
+
+```bash
+uvicorn main:app --reload
+```
+
+브라우저에서 `http://localhost:8000` 으로 접속합니다.
+
+## 📂 프로젝트 구조 (Structure)
+
+```
+magnus-attendance-application/
+├── main.py              # 앱 진입점 (Entry point)
+├── database.py          # Firebase DB 초기화 및 연결
+├── logic.py             # 출석 시간 및 IP 체크 핵심 로직
+├── routers/             # API 라우터
+│   ├── auth.py          # 카카오 로그인 인증
+│   ├── attendance.py    # 출석 체크 API
+│   ├── views.py         # 화면 렌더링 (메인, 랭킹 등)
+│   └── admin.py         # 관리자 페이지 로직
+├── templates/           # HTML 템플릿 (Jinja2)
+├── static/              # 정적 파일 (CSS, JS, Images)
+└── requirements.txt     # 의존성 패키지 목록
+```
+
+## 📅 출석 규칙 (Attendance Rules)
+
+| 요일 | 훈련 시간 | 출석 인정 시간 | 지각 인정 시간 |
+|:---:|:---:|:---:|:---:|
+| **토요일** | 13:00 | 12:50 ~ 13:10 | 13:10 ~ 13:30 |
+| **일요일** | 16:00 | 15:50 ~ 16:10 | 16:10 ~ 16:30 |
+
+* 위 시간 외에는 출석 버튼이 비활성화되거나 "출석 시간이 아닙니다"라는 메시지가 표시됩니다.
+
+## 📝 라이선스 (License)
+
+이 프로젝트는 [MIT License](LICENSE)를 따릅니다.

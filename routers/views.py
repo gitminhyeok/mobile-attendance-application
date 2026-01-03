@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
+import os
 from database import get_db
 from logic import check_ip, check_attendance_time, get_current_kst_time, get_client_ip
 from datetime import datetime, timedelta
@@ -27,15 +28,27 @@ def get_ranking_data(db, target_date, valid_days_count, uid):
 
         sorted_stats = sorted(user_stats.items(), key=lambda x: x[1]['count'], reverse=True)
         
-        for rank, (u_id, stat) in enumerate(sorted_stats, 1):
+        current_rank = 0
+        last_count = -1
+        
+        for u_id, stat in sorted_stats:
+            count = stat['count']
+            if count != last_count:
+                current_rank += 1
+            last_count = count
+            
             u_doc = db.collection("users").document(u_id).get()
-            u_nick = u_doc.to_dict().get("nickname", "Unknown") if u_doc.exists else "Unknown"
+            u_data = u_doc.to_dict() if u_doc.exists else {}
+            u_nick = u_data.get("nickname", "Unknown")
+            u_profile = u_data.get("profile_image", "")
+            
             rate = int((stat['count'] / valid_days_count) * 100)
             
             ranking_list.append({
-                "rank": rank,
+                "rank": current_rank,
                 "nickname": u_nick,
-                "count": stat['count'],
+                "profile_image": u_profile,
+                "count": count,
                 "rate": rate,
                 "is_me": (u_id == uid)
             })
@@ -262,7 +275,8 @@ async def read_root(request: Request): # Removed query params from root
         "valid_days_count": valid_days_count,
         "current_month_name": now.strftime("%B %Y"),
         "initial_year": now.year,
-        "initial_month": now.month
+        "initial_month": now.month,
+        "kakao_js_key": os.getenv("KAKAO_JS_KEY")
     }
     return templates.TemplateResponse("index.html", context)
     my_record = {
