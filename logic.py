@@ -54,11 +54,11 @@ def check_attendance_time():
     
     if weekday == 5: # Saturday
         # 13:00 기준
-        # 출석: 12:50 ~ 13:10
-        # 지각: 13:10:01 ~ 13:30
-        start_attend = time(12, 50)
-        end_attend = time(13, 10)
-        end_late = time(13, 30)
+        # 출석: 12:45 ~ 13:15 (전후 15분)
+        # 지각: 13:15:01 ~ 15:00 (기준 시간 2시간까지)
+        start_attend = time(12, 45)
+        end_attend = time(13, 15)
+        end_late = time(15, 0)
         
         if start_attend <= current_time <= end_attend:
             return "open", "출석 가능"
@@ -69,11 +69,11 @@ def check_attendance_time():
 
     elif weekday == 6: # Sunday
         # 16:00 기준
-        # 출석: 15:50 ~ 16:10
-        # 지각: 16:10:01 ~ 16:30
-        start_attend = time(15, 50)
-        end_attend = time(16, 10)
-        end_late = time(16, 30)
+        # 출석: 15:45 ~ 16:15 (전후 15분)
+        # 지각: 16:15:01 ~ 18:00 (기준 시간 2시간까지)
+        start_attend = time(15, 45)
+        end_attend = time(16, 15)
+        end_late = time(18, 0)
 
         if start_attend <= current_time <= end_attend:
             return "open", "출석 가능"

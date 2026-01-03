@@ -28,7 +28,7 @@ def login_kakao():
 
 @router.get("/auth/kakao/callback")
 def allback(code: str, request: Request, response: Response):
-    client_kakao_cid = os.getenv("KAKAO_CLIENT_ID")
+    client_id = os.getenv("KAKAO_CLIENT_ID")
     redirect_uri = os.getenv("KAKAO_REDIRECT_URI")
 
     if not code:

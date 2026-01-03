@@ -9,7 +9,7 @@
         <!-- Main Logo Image instead of Typography -->
         <div class="mb-8 md:mb-12 animate-[slideUp_1s_ease-out] flex flex-col items-center">
             <img src="/static/team-magnus-logo.jpg" alt="MAGNUS TEAM LOGO" class="w-40 h-40 md:w-64 md:h-64 object-contain rounded-full shadow-2xl mb-6 md:mb-8 border-4 border-gray-50">
-            <h1 class="font-serif text-4xl md:text-7xl tracking-tighter leading-none">
+            <h1 class="text-4xl md:text-7xl tracking-tighter leading-none">
                 TEAM MAGNUS
             </h1>
         </div>
@@ -60,15 +60,16 @@
         <!-- Dashboard Header -->
         <div class="flex flex-col md:flex-row md:items-end justify-between mb-16">
             <div>
-                <h3 class="font-serif text-4xl md:text-5xl leading-tight font-bold">안녕하세요,<br/>{{ nickname }}님.</h3>
+                <h3 class="text-4xl md:text-5xl leading-tight font-bold">안녕하세요,<br/>{{ nickname }}님.</h3>
+                <p class="mt-4 text-lg font-bold tracking-tight {{ status_color }}">{{ status_message }}</p>
             </div>
             
             <!-- Monthly Rate Donut Chart -->
             <div class="mt-8 md:mt-0 flex items-center">
                 <div class="relative w-24 h-24 rounded-full flex items-center justify-center mr-6"
-                     style="background: conic-gradient(black {{ my_record.attendance_rate }}%, #e5e7eb 0);">
+                    style="background: conic-gradient(black {{ my_record.attendance_rate }}%, #e5e7eb 0);">
                     <div class="w-20 h-20 bg-magnus-gray rounded-full flex items-center justify-center">
-                        <span class="text-xl font-serif font-bold">{{ my_record.attendance_rate }}%</span>
+                        <span class="text-2xl font-bold">{{ my_record.attendance_rate }}%</span>
                     </div>
                 </div>
                 <div class="text-left">
@@ -82,14 +83,14 @@
             <!-- Stats Cards -->
             <div class="lg:col-span-1 flex flex-col gap-6">
                 <div class="bg-white p-8 border border-gray-200 shadow-sm flex-1 flex flex-col justify-center">
-                    <p class="text-l text-gray-500 tracking-widest mb-4">총 수업 중</p>
+                    <p class="text-xl text-gray-500 mt-2">수업에 총</p>
                     <p class="text-5xl font-bold">{{ my_record.total_attendance }} 번</p>
-                    <p class="text-m text-gray-500 mt-2">참여하셨습니다.</p>
+                    <p class="text-xl text-gray-500 mt-2">참여하셨습니다.</p>
                 </div>
                 <div class="bg-black text-white p-8 shadow-sm flex-1 flex flex-col justify-center">
-                     <p class="text-m text-gray-500 tracking-widest mb-4">연속으로는</p>
+                     <p class="text-xl text-gray-500 mt-2">연속으로는</p>
                      <p class="text-5xl">{{ my_record.current_streak }} 번</p>
-                     <p class="text-m text-gray-500 mt-2">참여하셨습니다.</p>
+                     <p class="text-xl text-gray-500 mt-2">참여하셨습니다.</p>
                 </div>
             </div>
 
@@ -181,7 +182,7 @@
                     {% if ranking_list %}
                         {% for item in ranking_list %}
                         <tr class="group hover:bg-gray-50 transition-colors {{ 'bg-gray-50' if item.is_me else '' }} animate-[fadeIn_0.3s_ease-out]">
-                            <td class="py-5 font-serif text-xl font-bold text-black text-center">
+                            <td class="py-5 text-xl font-bold text-black text-center">
                                 {{ item.rank }}
                             </td>
                             <td class="py-5 pl-4">
@@ -221,8 +222,8 @@
 <section id="about" class="py-32 bg-black text-white px-6 snap-start">
     <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
         <div>
-            <h2 class="font-serif text-3xl md:text-4xl mb-8 leading-tight">마그누스는</h2>
-            <p class="font-serif text-gray-350 leading-relaxed max-w-md mb-8">
+            <h2 class="text-3xl md:text-4xl mb-8 leading-tight">마그누스는</h2>
+            <p class="ftext-gray-350 leading-relaxed max-w-md mb-8">
                 대학생 연합 동아리로, 2022년부터 함께 운동하고 있습니다. <br/>
                 블루-퍼플 벨트 이상의 코치진이 훈련을 지도합니다. <br/>
                 매주 2회 수업과 스파링이 진행됩니다. <br/>
@@ -233,7 +234,7 @@
             <div class="grid grid-cols-2 gap-8">
                 <div>
                     <h4 class="text-xs font-black tracking-widest text-magnus-red mb-2">LOCATION</h4>
-                    <p class="font-serif text-sm">서울 중구 서애로1길 10 3-4층<br/>러쉬클랜 충무로점</p>
+                    <p class="text-sm">서울 중구 서애로1길 10 3-4층<br/>러쉬클랜 충무로점</p>
                 </div>
                 <div>
                     <h4 class="text-xs font-black tracking-widest text-magnus-red mb-2">SCHEDULE</h4>
@@ -243,7 +244,7 @@
         </div>
         <div id="map" class="h-96 bg-gray-900 border border-gray-800 flex items-center justify-center relative">
             {% if not kakao_js_key %}
-                <span class="text-gray-600 font-serif italic text-xl p-4 text-center">
+                <span class="text-gray-600 italic text-xl p-4 text-center">
                     Map Unavailable<br/>
                     <span class="text-sm not-italic font-sans text-gray-700 mt-2 block">
                         Please add <code>KAKAO_JS_KEY</code> to .env
@@ -268,14 +269,14 @@
     document.addEventListener("DOMContentLoaded", function() {
         var container = document.getElementById('map');
         var options = {
-            center: new kakao.maps.LatLng(37.55998, 126.99537), // Rush Clan Chungmuro
+            center: new kakao.maps.LatLng(37.560912, 126.9985), // Rush Clan Chungmuro
             level: 3
         };
 
         var map = new kakao.maps.Map(container, options);
 
         // Marker Position
-        var markerPosition  = new kakao.maps.LatLng(37.55998, 126.99537); 
+        var markerPosition  = new kakao.maps.LatLng(37.560912, 126.9985); 
 
         // Create Marker
         var marker = new kakao.maps.Marker({
@@ -371,7 +372,7 @@
                     let profileImg = item.profile_image ? item.profile_image : `https://ui-avatars.com/api/?name=${item.nickname}&background=random`;
                     const row = `
                         <tr class="group hover:bg-gray-50 transition-colors ${item.is_me ? 'bg-gray-50' : ''} animate-[fadeIn_0.3s_ease-out]">
-                            <td class="py-5 font-serif text-xl font-bold text-black text-center">${item.rank}</td>
+                            <td class="py-5 text-xl font-bold text-black text-center">${item.rank}</td>
                             <td class="py-5 pl-4">
                                 <div class="flex items-center">
                                     <img src="${profileImg}" alt="${item.nickname}" class="w-10 h-10 rounded-full object-cover mr-3 border border-gray-200 shadow-sm bg-gray-100">

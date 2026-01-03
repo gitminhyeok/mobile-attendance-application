@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 import os
 from database import get_db
 from logic import check_ip, check_attendance_time, get_current_kst_time, get_client_ip
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 import calendar
 from google.cloud.firestore_v1.base_query import FieldFilter
 
@@ -20,7 +20,8 @@ def get_ranking_data(db, target_date, valid_days_count, uid):
         user_stats = {}
         for doc in all_docs:
             data = doc.to_dict()
-            if data.get('date', '').startswith(current_month_prefix):
+            # Only count if status is 'present' (exclude 'late')
+            if data.get('date', '').startswith(current_month_prefix) and data.get('status') == 'present':
                 u_id = data['user_id']
                 if u_id not in user_stats:
                     user_stats[u_id] = {'count': 0}
@@ -85,6 +86,10 @@ async def get_ranking_api(request: Request, year: int, month: int):
     for day in check_range:
         d = datetime(check_year, check_month, day)
         if d.weekday() in [5, 6]: 
+            # If checking today, verify start time
+            if d.date() == now.date():
+                if d.weekday() == 5 and now.time() < time(12, 45): continue
+                if d.weekday() == 6 and now.time() < time(15, 45): continue
             valid_days_count += 1
     if valid_days_count == 0: valid_days_count = 1
 
@@ -214,6 +219,10 @@ async def read_root(request: Request): # Removed query params from root
     for day in range(1, now.day + 1):
         d = datetime(now.year, now.month, day)
         if d.weekday() in [5, 6]:
+            # If checking today, verify start time
+            if d.date() == now.date():
+                if d.weekday() == 5 and now.time() < time(12, 45): continue
+                if d.weekday() == 6 and now.time() < time(15, 45): continue
             valid_days_count += 1
     if valid_days_count == 0: valid_days_count = 1
 
@@ -258,7 +267,42 @@ async def read_root(request: Request): # Removed query params from root
         my_record["attendance_rate"] = int((my_record["current_month_count"] / valid_days_count) * 100)
         my_record["current_streak"] = my_record["current_month_count"] 
 
-    # 4. Ranking Data (Initial Load using helper)
+    # 4. Determine Status Message
+    status_message = "첫 출석을 기다리고 있어요 🌱"
+    status_color = "text-gray-500"
+    
+    if uid and db:
+        # Get last attendance for message logic
+        last_attend_doc = (
+            db.collection("attendance")
+            .where(filter=FieldFilter("user_id", "==", uid))
+            .order_by("date", direction="DESCENDING")
+            .limit(1)
+            .stream()
+        )
+        last_attend_list = list(last_attend_doc)
+        
+        if last_attend_list:
+            last_data = last_attend_list[0].to_dict()
+            last_date_str = last_data['date']
+            last_date = datetime.strptime(last_date_str, "%Y-%m-%d").date()
+            days_absent = (now.date() - last_date).days
+            
+            if days_absent >= 14:
+                status_message = "2주간 참여하지 못했어요 😢"
+                status_color = "text-magnus-red"
+            elif days_absent < 7:
+                if my_record["current_month_count"] > 1:
+                    status_message = "훌륭해요, 연속으로 참석 중이예요 🔥"
+                    status_color = "text-blue-600"
+                else:
+                    status_message = "이번 주도 훈련하셨어요 👍"
+                    status_color = "text-black"
+            else:
+                status_message = "어서오세요! 오늘도 화이팅하세요 💪"
+                status_color = "text-gray-500"
+
+    # 5. Ranking Data (Initial Load using helper)
     ranking_list = get_ranking_data(db, target_date, valid_days_count, uid)
 
     context = {
@@ -276,7 +320,9 @@ async def read_root(request: Request): # Removed query params from root
         "current_month_name": now.strftime("%B %Y"),
         "initial_year": now.year,
         "initial_month": now.month,
-        "kakao_js_key": os.getenv("KAKAO_JS_KEY")
+        "kakao_js_key": os.getenv("KAKAO_JS_KEY"),
+        "status_message": status_message,
+        "status_color": status_color
     }
     return templates.TemplateResponse("index.html", context)
     my_record = {
@@ -460,6 +506,10 @@ async def read_my_attendance(request: Request):
     for day in range(1, now.day + 1):
         d = datetime(now.year, now.month, day)
         if d.weekday() in [5, 6]: # Sat, Sun
+            # If checking today, verify start time
+            if d.date() == now.date():
+                if d.weekday() == 5 and now.time() < time(12, 45): continue
+                if d.weekday() == 6 and now.time() < time(15, 45): continue
             valid_days_count += 1
             
     attendance_rate = 0
