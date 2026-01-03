@@ -29,18 +29,18 @@
                     </div>
                 {% elif not is_ip_valid %}
                     <div class="bg-black text-white py-4 px-12 rounded-full cursor-not-allowed opacity-50">
-                        <span class="text-xs font-black tracking-widest flex items-center gap-2">와이파이에 연결해주세요.</span>
+                        <span class="text-xs tracking-widest flex items-center gap-2">와이파이에 연결해주세요.</span>
                     </div>
                 {% else %}
                     <button onclick="doAttendance()" id="attend-btn" class="group relative px-16 py-6 bg-black text-white overflow-hidden transition-all hover:pr-20">
-                        <span class="relative z-10 text-sm font-black tracking-[0.2em]">출석하기</span>
+                        <span class="relative z-10 text-sm tracking-[0.2em]">출석하기</span>
                         <div class="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 transition-all group-hover:opacity-100 group-hover:right-8">
                             <i data-lucide="arrow-right" class="w-5 h-5"></i>
                         </div>
                     </button>
                 {% endif %}
             {% else %}
-                <a href="/login/kakao" class="border-2 border-black py-5 px-12 text-sm font-black tracking-widest hover:bg-black hover:text-white transition-all">
+                <a href="/login/kakao" class="border-2 border-black py-5 px-12 text-sm tracking-widest hover:bg-black hover:text-white transition-all">
                     LOGIN WITH KAKAO
                 </a>
             {% endif %}
@@ -48,7 +48,7 @@
     </div>
     <!-- Scroll Indicator -->
     <div class="absolute bottom-6 md:bottom-10 animate-bounce flex flex-col items-center">
-        <span class="text-[10px] font-black tracking-widest text-gray-300 mb-2 uppercase">Scroll</span>
+        <span class="text-[10px] tracking-widest text-gray-300 mb-2 uppercase">Scroll</span>
         <i data-lucide="chevron-down" class="w-6 h-6 text-gray-300"></i>
     </div>
 </section>
@@ -60,7 +60,7 @@
         <!-- Dashboard Header -->
         <div class="mb-24 animate-[fadeIn_1s_ease-out]">
             <div class="max-w-3xl">
-                <h3 class="text-4xl md:text-7xl leading-tight font-black tracking-tighter mb-10">
+                <h3 class="text-4xl md:text-7xl leading-tight tracking-tighter mb-10">
                     안녕하세요,<br/>{{ nickname }}님.
                 </h3>
                 
@@ -75,14 +75,14 @@
                         <div class="relative w-32 h-32 md:w-48 md:h-48 rounded-full flex items-center justify-center shrink-0"
                              style="background: conic-gradient(black {{ my_record.attendance_rate }}%, #f3f4f6 0);">
                             <div class="w-28 h-28 md:w-40 md:h-40 bg-white rounded-full flex items-center justify-center shadow-inner">
-                                <span class="text-3xl md:text-5xl font-black">{{ my_record.attendance_rate }}%</span>
+                                <span class="text-3xl md:text-5xl">{{ my_record.attendance_rate }}%</span>
                             </div>
                         </div>
                         <div class="flex flex-col">
-                            <!-- <span class="text-[10px] md:text-xs font-black text-gray-300 uppercase tracking-[0.4em] mb-3">Attendance</span> -->
-                            <h4 class="text-2xl md:text-4xl font-black leading-none">이달의 출석률</h4>
+                            <!-- <span class="text-[10px] md:text-xs text-gray-300 uppercase tracking-[0.4em] mb-3">Attendance</span> -->
+                            <h4 class="text-2xl md:text-4xl leading-none">이달의 출석률</h4>
                             <div class="mt-4 flex items-baseline gap-2">
-                                <span class="text-2xl md:text-3xl font-black text-black">{{ my_record.current_month_count }}</span>
+                                <span class="text-2xl md:text-3xl text-black">{{ my_record.current_month_count }}</span>
                                 <span class="text-sm md:text-lg font-bold text-gray-300">/ {{ valid_days_count }} Classes</span>
                             </div>
                         </div>
@@ -96,12 +96,12 @@
             <div class="lg:col-span-1 flex flex-col gap-6">
                 <div class="bg-white p-10 border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.03)] rounded-[2.5rem] flex-1 flex flex-col justify-center transition-transform hover:scale-[1.02]">
                     <p class="text-lg text-gray-400 mb-2">총</p>
-                    <p class="text-6xl font-black">{{ my_record.total_attendance }} <span class="text-2xl text-gray-300">번</span></p>
+                    <p class="text-6xl">{{ my_record.total_attendance }} <span class="text-2xl text-gray-300">번</span></p>
                     <p class="text-lg text-gray-400 mt-4">훈련에 참여했어요</p>
                 </div>
                 <div class="bg-black text-white p-10 shadow-[0_20px_50px_rgba(0,0,0,0.2)] rounded-[2.5rem] flex-1 flex flex-col justify-center transition-transform hover:scale-[1.02]">
                      <p class="text-lg text-gray-500 mb-2">최고기록으로</p>
-                     <p class="text-6xl font-black">{{ my_record.current_streak }} <span class="text-2xl text-gray-600">주</span></p>
+                     <p class="text-6xl">{{ my_record.current_streak }} <span class="text-2xl text-gray-600">주</span></p>
                      <p class="text-lg text-gray-500 mt-4">연속으로 훈련에 나왔어요</p>
                 </div>
             </div>
@@ -244,21 +244,22 @@
             </p>
             <div class="grid grid-cols-2 gap-8">
                 <div>
-                    <h4 class="text-xs font-black tracking-widest text-magnus-red mb-2">LOCATION</h4>
+                    <h4 class="text-xs tracking-widest text-magnus-red mb-2">LOCATION</h4>
                     <p class="text-sm">서울 중구 서애로1길 10 3-4층<br/>러쉬클랜 충무로점</p>
                 </div>
                 <div>
-                    <h4 class="text-xs font-black tracking-widest text-magnus-red mb-2">SCHEDULE</h4>
+                    <h4 class="text-xs tracking-widest text-magnus-red mb-2">SCHEDULE</h4>
                     <p class="text-sm">SAT 13:00 / SUN 16:00</p>
                 </div>
             </div>
         </div>
-        <div id="map" class="h-96 bg-gray-900 border border-gray-800 flex items-center justify-center relative">
+        <div id="map" class="h-96 min-h-[24rem] w-full bg-gray-900 border border-gray-800 flex items-center justify-center relative rounded-xl overflow-hidden shadow-lg">
             {% if not kakao_js_key %}
                 <span class="text-gray-600 italic text-xl p-4 text-center">
                     Map Unavailable<br/>
                     <span class="text-sm not-italic font-sans text-gray-700 mt-2 block">
-                        Please add <code>KAKAO_JS_KEY</code> to .env
+                        Please add <code>KAKAO_JS_KEY</code> to .env<br/>
+                        And add domain to Kakao Developers
                     </span>
                 </span>
             {% endif %}
@@ -275,30 +276,38 @@
 
 <!-- Kakao Map Script -->
 {% if kakao_js_key %}
-<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_js_key }}"></script>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_js_key }}&libraries=services&autoload=false"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        var container = document.getElementById('map');
-        var options = {
-            center: new kakao.maps.LatLng(37.560912, 126.9985), // Rush Clan Chungmuro
-            level: 3
-        };
+        kakao.maps.load(function() {
+            var container = document.getElementById('map');
+            var options = {
+                center: new kakao.maps.LatLng(37.560912, 126.9985), // Rush Clan Chungmuro
+                level: 3
+            };
 
-        var map = new kakao.maps.Map(container, options);
+            var map = new kakao.maps.Map(container, options);
 
-        // Marker Position
-        var markerPosition  = new kakao.maps.LatLng(37.560912, 126.9985); 
+            // Marker Position
+            var markerPosition  = new kakao.maps.LatLng(37.560912, 126.9985); 
 
-        // Create Marker
-        var marker = new kakao.maps.Marker({
-            position: markerPosition
+            // Create Marker
+            var marker = new kakao.maps.Marker({
+                position: markerPosition
+            });
+
+            marker.setMap(map);
+            
+            // Add zoom control
+            var zoomControl = new kakao.maps.ZoomControl();
+            map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+            
+            // Re-layout map on window resize (fixes mobile orientation change issues)
+            window.addEventListener('resize', function() {
+                map.relayout();
+                map.setCenter(markerPosition);
+            });
         });
-
-        marker.setMap(map);
-        
-        // Add zoom control
-        var zoomControl = new kakao.maps.ZoomControl();
-        map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
     });
 </script>
 {% endif %}
