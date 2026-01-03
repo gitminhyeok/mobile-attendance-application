@@ -58,53 +58,64 @@
 <section id="record" class="min-h-screen py-32 px-6 bg-magnus-gray flex items-center snap-start">
     <div class="max-w-6xl mx-auto w-full">
         <!-- Dashboard Header -->
-        <div class="mb-16">
-            <div class="flex flex-row items-center justify-between gap-4 md:justify-start md:gap-12">
-                <h3 class="text-4xl md:text-5xl leading-tight font-bold">안녕하세요,<br/>{{ nickname }}님.</h3>
+        <div class="mb-24 animate-[fadeIn_1s_ease-out]">
+            <div class="max-w-3xl">
+                <h3 class="text-4xl md:text-7xl leading-tight font-black tracking-tighter mb-10">
+                    안녕하세요,<br/>{{ nickname }}님.
+                </h3>
                 
-                <!-- Monthly Rate Donut Chart -->
-                <div class="flex items-center shrink-0">
-                    <div class="relative w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center mr-2 md:mr-4 shadow-sm"
-                        style="background: conic-gradient(black {{ my_record.attendance_rate }}%, #e5e7eb 0);">
-                        <div class="w-12 h-12 md:w-16 md:h-16 bg-magnus-gray rounded-full flex items-center justify-center">
-                            <span class="text-sm md:text-lg font-bold">{{ my_record.attendance_rate }}%</span>
-                        </div>
+                <div class="flex flex-col gap-10">
+                    <!-- Prominent Status Message -->
+                    <div class="inline-block border-l-4 border-black pl-6 py-2">
+                        <p class="text-xl md:text-2xl font-bold tracking-tight {{ status_color }}">{{ status_message }}</p>
                     </div>
-                    <div class="text-left">
-                        <p class="text-lg md:text-base font-bold">이달의 출석률</p>
-                        <p class="text-[14px] md:text-[18px] text-gray-400 uppercase tracking-widest">{{ my_record.current_month_count }} / {{ valid_days_count }} <span class="hidden md:inline">Classes</span></p>
+
+                    <!-- Enhanced Monthly Rate Chart Card -->
+                    <div class="flex items-center gap-8 bg-white p-8 md:p-12 rounded-[2rem] border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)] w-full md:w-fit transition-transform hover:scale-[1.02]">
+                        <div class="relative w-32 h-32 md:w-48 md:h-48 rounded-full flex items-center justify-center shrink-0"
+                             style="background: conic-gradient(black {{ my_record.attendance_rate }}%, #f3f4f6 0);">
+                            <div class="w-28 h-28 md:w-40 md:h-40 bg-white rounded-full flex items-center justify-center shadow-inner">
+                                <span class="text-3xl md:text-5xl font-black">{{ my_record.attendance_rate }}%</span>
+                            </div>
+                        </div>
+                        <div class="flex flex-col">
+                            <!-- <span class="text-[10px] md:text-xs font-black text-gray-300 uppercase tracking-[0.4em] mb-3">Attendance</span> -->
+                            <h4 class="text-2xl md:text-4xl font-black leading-none">이달의 출석률</h4>
+                            <div class="mt-4 flex items-baseline gap-2">
+                                <span class="text-2xl md:text-3xl font-black text-black">{{ my_record.current_month_count }}</span>
+                                <span class="text-sm md:text-lg font-bold text-gray-300">/ {{ valid_days_count }} Classes</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <p class="mt-6 text-base md:text-lg font-bold tracking-tight {{ status_color }}">{{ status_message }}</p>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Stats Cards -->
             <div class="lg:col-span-1 flex flex-col gap-6">
-                <div class="bg-white p-8 border border-gray-200 shadow-sm flex-1 flex flex-col justify-center">
-                    <p class="text-xl text-gray-500 mt-2">수업에 총</p>
-                    <p class="text-5xl font-bold">{{ my_record.total_attendance }} 번</p>
-                    <p class="text-xl text-gray-500 mt-2">참여하셨습니다.</p>
+                <div class="bg-white p-10 border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.03)] rounded-[2.5rem] flex-1 flex flex-col justify-center transition-transform hover:scale-[1.02]">
+                    <p class="text-lg text-gray-400 mb-2">총</p>
+                    <p class="text-6xl font-black">{{ my_record.total_attendance }} <span class="text-2xl text-gray-300">번</span></p>
+                    <p class="text-lg text-gray-400 mt-4">훈련에 참여했어요</p>
                 </div>
-                <div class="bg-black text-white p-8 shadow-sm flex-1 flex flex-col justify-center">
-                     <p class="text-xl text-gray-500 mt-2">연속으로는</p>
-                     <p class="text-5xl">{{ my_record.current_streak }} 번</p>
-                     <p class="text-xl text-gray-500 mt-2">참여하셨습니다.</p>
+                <div class="bg-black text-white p-10 shadow-[0_20px_50px_rgba(0,0,0,0.2)] rounded-[2.5rem] flex-1 flex flex-col justify-center transition-transform hover:scale-[1.02]">
+                     <p class="text-lg text-gray-500 mb-2">최고기록으로</p>
+                     <p class="text-6xl font-black">{{ my_record.current_streak }} <span class="text-2xl text-gray-600">주</span></p>
+                     <p class="text-lg text-gray-500 mt-4">연속으로 훈련에 나왔어요</p>
                 </div>
             </div>
 
             <!-- Calendar Heatmap -->
-            <div class="lg:col-span-2 bg-white border border-gray-200 p-8">
-                <div class="flex items-center justify-between mb-8 border-b border-black pb-4">
-                    <h4 class="text-sm font-bold uppercase tracking-widest">Training Log</h4>
-                    <div class="flex items-center space-x-6 select-none">
-                        <button onclick="changeRecordMonth(-1)" class="focus:outline-none hover:text-magnus-red transition">
-                            <i data-lucide="chevron-left" class="w-5 h-5"></i>
+            <div class="lg:col-span-2 bg-white border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.03)] rounded-[2.5rem] p-10">
+                <div class="flex items-center justify-center mb-10 border-b border-gray-100 pb-6 relative">
+                    <div class="flex items-center space-x-8 select-none">
+                        <button onclick="changeRecordMonth(-1)" class="p-3 hover:bg-gray-50 rounded-full transition focus:outline-none group">
+                            <i data-lucide="chevron-left" class="w-6 h-6 text-gray-400 group-hover:text-black"></i>
                         </button>
-                        <span id="record-month-label" class="text-sm font-bold uppercase w-32 text-center">{{ current_month_name }}</span>
-                        <button id="record-next-btn" onclick="changeRecordMonth(1)" class="focus:outline-none hover:text-magnus-red transition invisible">
-                            <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                        <span id="record-month-label" class="text-2xl w-48 text-center tracking-tight">{{ current_month_name }}</span>
+                        <button id="record-next-btn" onclick="changeRecordMonth(1)" class="p-3 hover:bg-gray-50 rounded-full transition focus:outline-none group invisible">
+                            <i data-lucide="chevron-right" class="w-6 h-6 text-gray-400 group-hover:text-black"></i>
                         </button>
                     </div>
                 </div>
