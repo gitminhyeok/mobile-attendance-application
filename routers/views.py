@@ -177,9 +177,46 @@ async def get_record_calendar_api(request: Request, year: int, month: int):
     except ValueError:
         return JSONResponse(status_code=400, content={"message": "Invalid date"})
 
+    # 1. Valid Days Calculation for the target month
+    valid_days_count = 0
+    last_day = calendar.monthrange(year, month)[1]
+    now = get_current_kst_time()
+    
+    # Logic to count valid days (Sat/Sun) up to today if current month, or all month if past
+    check_range = range(1, last_day + 1)
+    
+    # If future month, valid days is 0 (or estimation? let's say 0 for now or estimate based on full month)
+    # Actually, for rate calculation, we usually compare against "days passed so far" or "total class days in month".
+    # Let's use "Total class days in month" for past months, and "Days passed" for current.
+    
+    if target_date.strftime("%Y-%m") == now.strftime("%Y-%m"):
+        # Current month: count up to today
+        check_range = range(1, now.day + 1)
+    elif target_date > now:
+        check_range = [] # Future
+    else:
+        # Past month: full month
+        check_range = range(1, last_day + 1)
+
+    for day in check_range:
+        d = datetime(year, month, day)
+        if d.weekday() in [5, 6]: # Sat, Sun
+             # For current day check time? Simplified: just count day if it's passed or today
+             valid_days_count += 1
+             
+    if valid_days_count == 0: valid_days_count = 1 # Avoid division by zero
+
+    # 2. Get Calendar & Count
     calendar_grid = get_calendar_data(db, uid, target_date)
     
-    now = get_current_kst_time()
+    # Count present from the grid data (since get_calendar_data already fetches it)
+    current_month_count = 0
+    for day in calendar_grid:
+        if day.get('status') == 'present':
+            current_month_count += 1
+            
+    attendance_rate = int((current_month_count / valid_days_count) * 100)
+    
     # Check if current month to hide next button
     is_current = (target_date.strftime("%Y-%m") == now.strftime("%Y-%m"))
     
@@ -188,7 +225,12 @@ async def get_record_calendar_api(request: Request, year: int, month: int):
         "month_name": target_date.strftime("%B %Y"),
         "year": year,
         "month": month,
-        "is_current_month": is_current
+        "month_num": month,
+        "short_year": str(year)[-2:],
+        "is_current_month": is_current,
+        "attendance_count": current_month_count,
+        "attendance_rate": attendance_rate,
+        "valid_days_count": valid_days_count
     })
 
 @router.get("/", response_class=HTMLResponse)

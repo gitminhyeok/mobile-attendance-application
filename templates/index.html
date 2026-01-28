@@ -84,39 +84,49 @@
                                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                     <!-- Stats Cards (Left Column) -->
                                     <div class="lg:col-span-1 flex flex-col gap-6">
-                                        <!-- 1. Monthly Rate Card -->
-                                        <div class="flex items-center gap-8 bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.03)] transition-transform hover:scale-[1.02]">
-                                            <div class="relative w-32 h-32 md:w-40 md:h-40 rounded-full flex items-center justify-center shrink-0"
-                                                 style="background: conic-gradient(black {{ my_record.attendance_rate }}%, #f3f4f6 0);">
-                                                <div class="w-28 h-28 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center shadow-inner">
-                                                    <span class="text-3xl md:text-4xl font-bold">{{ my_record.attendance_rate }}%</span>
-                                                </div>
+                                                        <!-- 1. Monthly Rate Card -->
+                                                        <div class="flex items-center gap-8 bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.03)] transition-transform hover:scale-[1.02]">
+                                                            <div id="rate-chart" class="relative w-32 h-32 md:w-40 md:h-40 rounded-full flex items-center justify-center shrink-0"
+                                                                style="background: conic-gradient(black {{ my_record.attendance_rate }}%, #f3f4f6 0);">
+                                                                <div class="w-28 h-28 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center shadow-inner">
+                                                                    <span id="rate-percent" class="text-3xl md:text-4xl font-bold">{{ my_record.attendance_rate }}%</span>
                                                                 </div>
-                                                                <div class="flex flex-col">
-                                                                    <h4 class="text-2xl md:text-3xl leading-none font-bold">{{ current_month_num }}월</h4>
-                                                                    <div class="mt-4 flex items-baseline gap-2">                                                    <span class="text-2xl md:text-3xl text-black">{{ my_record.current_month_count }}</span>
-                                                    <span class="text-sm md:text-lg font-bold text-gray-300">/ {{ valid_days_count }} Classes</span>
-                                                </div>
-                                            </div>
-                                        </div>
+                                                            </div>
+                                                                                                                        <div class="flex flex-col">
+                                                                                                                            <div class="flex items-center gap-2 mb-2 select-none relative h-12">
+                                                                                                                                <button id="rate-prev-btn" onclick="changeRecordMonth(-1)" class="p-1 hover:bg-gray-100 rounded-full transition-colors {{ 'invisible' if initial_year == 2026 and initial_month == 1 else '' }}"><i data-lucide="chevron-left" class="w-5 h-5 text-gray-400"></i></button>
+                                                                                                                                
+                                                                                                                                <div class="relative flex flex-col items-start justify-center">                                                                                                                <span id="rate-year-label" class="absolute -top-3 left-1 text-sm text-gray-400 font-mono leading-none">{{ my_record.streak_date[:2] if my_record.streak_date else '26' }}.</span>
+                                                                                                                <h4 id="rate-month-label" class="text-2xl md:text-3xl whitespace-nowrap leading-none mt-2">
+                                                                                                                    {{ current_month_num }}월
+                                                                                                                </h4>
+                                                                                                            </div>
+                                                                                                            
+                                                                                                            <button id="rate-next-btn" onclick="changeRecordMonth(1)" class="p-1 hover:bg-gray-100 rounded-full transition-colors {{ 'invisible' if is_current_month else '' }}"><i data-lucide="chevron-right" class="w-5 h-5 text-gray-400"></i></button>
+                                                                                                        </div>
+                                                                                                        <div class="mt-2 flex items-baseline gap-2 pl-2">                                                                    <span id="rate-count" class="text-2xl md:text-3xl text-black">{{ my_record.current_month_count }}</span>
+                                                                    <span class="text-sm md:text-lg text-gray-400">/ <span id="rate-total">{{ valid_days_count }}</span> Classes</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
                         
                                         <!-- 2. Total Attendance Card -->
                                         <div class="bg-white p-10 border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.03)] rounded-[2.5rem] flex-1 flex flex-col justify-center transition-transform hover:scale-[1.02]">
                                             <p class="text-lg text-gray-400 mb-2">총</p>
-                                            <p class="text-6xl">{{ my_record.total_attendance }} <span class="text-2xl text-gray-300">번</span></p>
+                                            <p class="text-6xl">{{ my_record.total_attendance }} <span class="text-2xl text-gray-400">번</span></p>
                                             <p class="text-lg text-gray-400 mt-4">훈련에 참여했어요</p>
                                         </div>
                         
                                         <!-- 3. Best Streak Card -->
                                         <div class="bg-black text-white p-10 shadow-[0_20px_50px_rgba(0,0,0,0.2)] rounded-[2.5rem] flex-1 flex flex-col justify-center transition-transform hover:scale-[1.02]">
-                                             <p class="text-lg text-gray-500 mb-2">최고기록으로</p>
-                                             <div class="flex items-baseline gap-4">
-                                                 <p class="text-6xl">{{ my_record.current_streak }} <span class="text-2xl text-gray-600">주</span></p>
-                                                 {% if my_record.streak_date %}
+                                                <p class="text-lg text-gray-500 mb-2">최고기록으로</p>
+                                                <div class="flex items-baseline gap-4">
+                                                    <p class="text-6xl">{{ my_record.current_streak }} <span class="text-2xl text-gray-600">주</span></p>
+                                                    {% if my_record.streak_date %}
                                                     <span class="text-sm font-mono text-gray-600 tracking-tighter">~ {{ my_record.streak_date }}</span>
-                                                 {% endif %}
-                                             </div>
-                                             <p class="text-lg text-gray-500 mt-4">연속으로 훈련에 나왔어요</p>
+                                                    {% endif %}
+                                                </div>
+                                                <p class="text-lg text-gray-500 mt-4">연속으로 훈련에 나왔어요</p>
                                         </div>
                                     </div>            <!-- Calendar Heatmap -->
             <div class="lg:col-span-2 bg-white border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.03)] rounded-[2.5rem] p-10">
@@ -178,14 +188,14 @@
     <div class="max-w-5xl mx-auto w-full">
         <div class="text-center mb-12">
             <!-- <h2 class="text-xs font-black tracking-widest text-magnus-red uppercase mb-4">Leaderboard</h2> -->
-            <h3 class="font-bold text-5xl md:text-6xl mb-8">Ranking</h3>
+            <h3 class="text-5xl md:text-6xl mb-8">Ranking</h3>
             
             <!-- Month Navigation -->
             <div class="flex items-center justify-center space-x-8 border-b border-black pb-2 select-none w-full max-w-md mx-auto">
-                <button onclick="changeMonth(-1)" class="p-2 hover:bg-gray-100 rounded-full transition-colors group focus:outline-none w-10 h-10 flex items-center justify-center">
+                <button id="prev-month-btn" onclick="changeMonth(-1)" class="p-2 hover:bg-gray-100 rounded-full transition-colors group focus:outline-none w-10 h-10 flex items-center justify-center {{ 'invisible' if initial_year == 2026 and initial_month == 1 else '' }}">
                     <i data-lucide="chevron-left" class="w-5 h-5 group-hover:text-magnus-red"></i>
                 </button>
-                <span id="ranking-month-label" class="text-xl font-bold tracking-widest uppercase min-w-[10rem] text-center block leading-tight">{{ current_month_name.replace(' ', '<br/>') | safe }}</span>
+                <span id="ranking-month-label" class="text-xl tracking-widest uppercase min-w-[10rem] text-center block leading-tight">{{ current_month_name.replace(' ', '<br/>') | safe }}</span>
                 <button id="next-month-btn" onclick="changeMonth(1)" class="p-2 hover:bg-gray-100 rounded-full transition-colors group focus:outline-none w-10 h-10 flex items-center justify-center invisible">
                     <i data-lucide="chevron-right" class="w-5 h-5 group-hover:text-magnus-red"></i>
                 </button>
@@ -370,6 +380,34 @@
             // Force line break between Month and Year
             document.getElementById('record-month-label').innerHTML = data.month_name.replace(" ", "<br/>");
             
+            // Update Rate Card
+            document.getElementById('rate-percent').textContent = data.attendance_rate + "%";
+            document.getElementById('rate-count').textContent = data.attendance_count;
+            document.getElementById('rate-total').textContent = data.valid_days_count;
+            document.getElementById('rate-chart').style.background = `conic-gradient(black ${data.attendance_rate}%, #f3f4f6 0)`;
+            document.getElementById('rate-year-label').textContent = data.short_year + ".";
+            document.getElementById('rate-month-label').textContent = data.month_num + "월";
+            
+            const nextBtn = document.getElementById('record-next-btn');
+            const rateNextBtn = document.getElementById('rate-next-btn'); 
+            const ratePrevBtn = document.getElementById('rate-prev-btn'); // Prev button
+            
+            // Next Button Logic (Future limit)
+            if (data.is_current_month) {
+                nextBtn.classList.add('invisible');
+                rateNextBtn.classList.add('invisible');
+            } else {
+                nextBtn.classList.remove('invisible');
+                rateNextBtn.classList.remove('invisible');
+            }
+            
+            // Prev Button Logic (History limit: Jan 2026)
+            if (data.year === 2026 && data.month === 1) {
+                ratePrevBtn.classList.add('invisible');
+            } else {
+                ratePrevBtn.classList.remove('invisible');
+            }
+            
             const grid = document.getElementById('calendar-grid');
             grid.innerHTML = '';
             data.calendar_grid.forEach(day => {
@@ -417,6 +455,14 @@
             // Force line break between Month and Year
             document.getElementById('ranking-month-label').innerHTML = data.month_name.replace(" ", "<br/>");
             
+            // Toggle Prev Button (Hide if Jan 2026)
+            const prevBtn = document.getElementById('prev-month-btn');
+            if (currentYear === 2026 && currentMonth === 1) {
+                prevBtn.classList.add('invisible');
+            } else {
+                prevBtn.classList.remove('invisible');
+            }
+
             const tbody = document.getElementById('ranking-tbody');
             tbody.innerHTML = '';
             if (data.ranking_list.length === 0) {
