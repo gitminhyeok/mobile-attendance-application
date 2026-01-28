@@ -5,16 +5,16 @@
 {% block content %}
 <div class="bg-gray-100 min-h-screen py-12 px-6">
     <div class="max-w-6xl mx-auto">
-        <h1 class="text-3xl font-black text-gray-800 mb-8 uppercase tracking-widest">Admin Dashboard</h1>
+        <h1 class="text-3xl text-gray-800 mb-8 uppercase tracking-widest">Admin Dashboard</h1>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <!-- Dropout Zone (Red) -->
             <div class="bg-white rounded-xl shadow-lg border-t-8 border-red-600 p-6">
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-xl font-bold text-red-600 flex items-center">
-                        <i data-lucide="skull" class="w-6 h-6 mr-2"></i> 퇴출 예정자 (3+ Weeks)
+                        <i data-lucide="skull" class="w-6 h-6 mr-2"></i> 퇴출 예정
                     </h2>
-                    <span class="bg-red-100 text-red-800 text-xs font-bold px-3 py-1 rounded-full">{{ total_dropout }} Members</span>
+                    <span class="bg-red-100 text-red-800 text-xs font-bold px-3 py-1 rounded-full">{{ total_dropout }}</span>
                 </div>
                 
                 <div class="overflow-y-auto max-h-[500px]">
@@ -24,17 +24,17 @@
                             <li class="flex items-center justify-between p-4 bg-red-50 rounded-lg">
                                 <div>
                                     <p class="font-bold text-gray-800">{{ user.nickname }} <span class="text-[10px] text-gray-400 font-normal ml-1">#{{ user.uid }}</span></p>
-                                    <p class="text-xs text-red-500 font-bold">Last seen: {{ user.last_date }}</p>
+                                    <p class="text-xs text-red-500 font-bold">{{ user.reason if user.reason else 'Last seen: ' + user.last_date }}</p>
                                 </div>
                                 <div class="text-right">
                                     <span class="text-2xl font-black text-red-600">{{ user.days_absent }}</span>
-                                    <span class="text-[10px] text-gray-500 block uppercase">Days Absent</span>
+                                    <span class="text-[10px] text-gray-500 block uppercase">Days</span>
                                 </div>
                             </li>
                         {% endfor %}
                         </ul>
                     {% else %}
-                        <p class="text-gray-400 text-center py-8">모두가 열심히 중이예요!</p>
+                        <p class="text-gray-400 text-center py-8">Clean!</p>
                     {% endif %}
                 </div>
             </div>
@@ -43,9 +43,9 @@
             <div class="bg-white rounded-xl shadow-lg border-t-8 border-yellow-500 p-6">
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-xl font-bold text-yellow-600 flex items-center">
-                        <i data-lucide="alert-triangle" class="w-6 h-6 mr-2"></i> 연속 불참자 (2+ Weeks)
+                        <i data-lucide="alert-triangle" class="w-6 h-6 mr-2"></i> 경고 대상
                     </h2>
-                    <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-3 py-1 rounded-full">{{ total_warning }} Members</span>
+                    <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-3 py-1 rounded-full">{{ total_warning }}</span>
                 </div>
 
                 <div class="overflow-y-auto max-h-[500px]">
@@ -55,21 +55,770 @@
                             <li class="flex items-center justify-between p-4 bg-yellow-50 rounded-lg">
                                 <div>
                                     <p class="font-bold text-gray-800">{{ user.nickname }} <span class="text-[10px] text-gray-400 font-normal ml-1">#{{ user.uid }}</span></p>
-                                    <p class="text-xs text-yellow-600 font-bold">Last seen: {{ user.last_date }}</p>
+                                    <p class="text-xs text-yellow-600 font-bold">{{ user.reason if user.reason else 'Last seen: ' + user.last_date }}</p>
                                 </div>
                                 <div class="text-right">
                                     <span class="text-2xl font-black text-yellow-600">{{ user.days_absent }}</span>
-                                    <span class="text-[10px] text-gray-500 block uppercase">Days Absent</span>
+                                    <span class="text-[10px] text-gray-500 block uppercase">Days</span>
                                 </div>
                             </li>
                         {% endfor %}
                         </ul>
                     {% else %}
-                        <p class="text-gray-400 text-center py-8">모두가 진짜 열심히 중이예요!</p>
+                        <p class="text-gray-400 text-center py-8">Clean!</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Sick Leave Zone (Blue) -->
+            <div class="bg-white rounded-xl shadow-lg border-t-8 border-blue-500 p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold text-blue-600 flex items-center">
+                        <i data-lucide="thermometer" class="w-6 h-6 mr-2"></i> 병결
+                    </h2>
+                    <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full">{{ total_sick }}</span>
+                </div>
+
+                <div class="overflow-y-auto max-h-[500px]">
+                    {% if sick_list %}
+                        <ul class="space-y-3">
+                        {% for user in sick_list %}
+                            <li class="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                                <div>
+                                    <p class="font-bold text-gray-800">{{ user.nickname }} <span class="text-[10px] text-gray-400 font-normal ml-1">#{{ user.uid }}</span></p>
+                                    <p class="text-xs text-blue-500 font-bold">병결 휴식 중</p>
+                                </div>
+                                <div class="text-right">
+                                    <i data-lucide="pause-circle" class="w-6 h-6 text-blue-400 inline-block"></i>
+                                </div>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-gray-400 text-center py-8">모두 건강해요!</p>
                     {% endif %}
                 </div>
             </div>
         </div>
+
+        <!-- Manual Attendance Management (Calendar) -->
+        <div class="mt-12 bg-white rounded-xl shadow-lg p-8">
+            <div class="flex flex-col md:flex-row items-center justify-between mb-8 border-b border-gray-100 pb-6">
+                <h2 class="text-xl md:text-2xl font-bold text-gray-800 flex items-center mb-4 md:mb-0">
+                    <i data-lucide="calendar-check" class="w-6 h-6 mr-3"></i> 수기 출석 관리
+                </h2>
+                <div class="flex items-center space-x-6">
+                     <button onclick="changeAdminMonth(-1)" class="p-3 hover:bg-gray-100 rounded-full transition-colors"><i data-lucide="chevron-left" class="w-6 h-6"></i></button>
+                     <span id="admin-cal-month" class="text-xl font-bold w-40 text-center tracking-tight"></span>
+                     <button onclick="changeAdminMonth(1)" class="p-3 hover:bg-gray-100 rounded-full transition-colors"><i data-lucide="chevron-right" class="w-6 h-6"></i></button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-7 gap-1 mb-4 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span class="text-red-500">Sat</span><span class="text-red-500">Sun</span>
+            </div>
+            <div id="admin-calendar-grid" class="grid grid-cols-7 gap-2">
+                <!-- JS Generated -->
+            </div>
+            <p class="text-[10px] text-gray-400 mt-4 text-right">* Click on Saturday/Sunday to manage attendance.</p>
+        </div>
+
+        <!-- All Members Management Section -->
+        <div class="mt-12 bg-white rounded-xl shadow-lg p-8">
+            <div class="flex items-center justify-between mb-8 border-b border-gray-100 pb-4">
+                <h2 class="text-xl md:text-2xl font-bold text-gray-800 flex items-center">
+                    <i data-lucide="users" class="w-6 h-6 mr-3"></i> 전체 멤버 관리
+                </h2>
+                <span class="bg-gray-100 text-gray-800 text-sm font-bold px-4 py-1.5 rounded-full">{{ total_users }} Members</span>
+            </div>
+
+            <!-- Desktop Table View (Hidden on mobile) -->
+            <div class="hidden md:block overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b-2 border-gray-100 text-xs text-gray-400 uppercase tracking-wider">
+                            <th class="py-4 pl-4 font-bold">이름</th>
+                            <th class="py-4 font-bold">기수</th>
+                            <th class="py-4 font-bold">전화번호</th>
+                            <th class="py-4 font-bold text-center text-red-500">미통보 불참</th>
+                            <th class="py-4 font-bold text-center text-blue-500">병결</th>
+                            <th class="py-4 font-bold text-center">최근 출석일</th>
+                            <th class="py-4 font-bold text-center">저장</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                        {% for user in all_users_list %}
+                        <tr class="group hover:bg-gray-50 transition-colors">
+                            <td class="py-4 pl-4">
+                                <div class="flex items-center">
+                                    <img src="{{ user.profile_image if user.profile_image else 'https://ui-avatars.com/api/?name=' + user.nickname + '&background=random' }}" 
+                                         alt="{{ user.nickname }}" 
+                                         class="w-10 h-10 rounded-full object-cover mr-3 border border-gray-200 bg-gray-100">
+                                    <div class="flex flex-col">
+                                        <input type="text" id="nickname-{{ user.uid }}" value="{{ user.nickname }}" placeholder="{{ user.initial_nickname }}"
+                                               class="bg-transparent border-b border-transparent focus:border-black font-bold text-gray-800 text-sm focus:outline-none p-0 w-24">
+                                        <p class="text-[10px] text-gray-400 font-mono">#{{ user.uid }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-4">
+                                <input type="text" id="batch-{{ user.uid }}" value="{{ user.batch }}" placeholder="YY-MM"
+                                       onblur="autoFormatBatch(this)"
+                                       class="bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-lg focus:ring-black focus:border-black block w-24 p-2.5 font-mono"
+                                       maxlength="7">
+                            </td>
+                            <td class="py-4">
+                                <input type="tel" id="phone-{{ user.uid }}" value="{{ user.phone }}" placeholder="010-0000-0000"
+                                       oninput="autoFormatPhone(this)"
+                                       class="bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-lg focus:ring-black focus:border-black block w-32 p-2.5 font-mono"
+                                       maxlength="13">
+                            </td>
+                            <td class="py-4 text-center">
+                                <div class="flex flex-col gap-1 items-center">
+                                    <input type="text" id="unnotified-date1-{{ user.uid }}" value="{{ user.unnotified_date1 }}" placeholder="YY-MM-DD"
+                                           onblur="autoFormatDate(this)"
+                                           class="bg-red-50 border border-red-100 text-red-900 text-[10px] rounded-md w-20 p-1 text-center font-bold focus:ring-red-500">
+                                    <input type="text" id="unnotified-date2-{{ user.uid }}" value="{{ user.unnotified_date2 }}" placeholder="YY-MM-DD"
+                                           onblur="autoFormatDate(this)"
+                                           class="bg-red-50 border border-red-100 text-red-900 text-[10px] rounded-md w-20 p-1 text-center font-bold focus:ring-red-500">
+                                </div>
+                            </td>
+                            <td class="py-4 text-center">
+                                <input type="checkbox" id="sick-{{ user.uid }}" {{ 'checked' if user.is_sick_leave else '' }}
+                                       class="w-6 h-6 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 mx-auto block">
+                            </td>
+                            <td class="py-4 text-center">
+                                <span class="text-xs font-bold {{ 'text-red-500' if user.days_absent >= 14 else 'text-gray-500' }}">
+                                    {{ user.last_date }}
+                                </span>
+                                <div class="text-[9px] text-gray-400">({{ user.days_absent }} days ago)</div>
+                            </td>
+                            <td class="py-4 text-center">
+                                <div class="flex items-center justify-center space-x-2">
+                                    <button onclick="updateUserInfo('{{ user.uid }}')" 
+                                            class="bg-black text-white hover:bg-gray-800 text-xs font-bold py-2 px-4 rounded-lg transition-colors shadow-sm">
+                                        저장
+                                    </button>
+                                    <button onclick="deleteUser('{{ user.uid }}', '{{ user.nickname }}')" 
+                                            class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete Member">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile Card View (Shown only on mobile) -->
+            <div class="md:hidden space-y-4">
+                {% for user in all_users_list %}
+                <div onclick="openEditModal('{{ user.uid }}', '{{ user.nickname }}', '{{ user.initial_nickname }}', '{{ user.batch }}', '{{ user.phone }}', '{{ user.unnotified_date1 }}', '{{ user.unnotified_date2 }}', {{ 'true' if user.is_sick_leave else 'false' }}, '{{ user.profile_image if user.profile_image else '' }}')" 
+                     class="p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between active:scale-95 transition-transform cursor-pointer">
+                    <div class="flex items-center">
+                        <img src="{{ user.profile_image if user.profile_image else 'https://ui-avatars.com/api/?name=' + user.nickname + '&background=random' }}" 
+                             class="w-12 h-12 rounded-full mr-4 border border-white shadow-sm object-cover bg-gray-200">
+                        <div>
+                            <p class="font-bold text-gray-800">{{ user.nickname }}</p>
+                            <p class="text-[10px] text-gray-400">기수: {{ user.batch if user.batch else '-' }}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] font-bold block uppercase {{ 'text-red-500' if user.days_absent >= 14 else 'text-gray-400' }}">
+                            {{ user.last_date }}
+                        </span>
+                        <div class="flex items-center justify-end mt-1 gap-1">
+                             {% if user.is_sick_leave %}<span class="w-2 h-2 bg-blue-500 rounded-full"></span>{% endif %}
+                             {% if user.unnotified_count > 0 %}<span class="w-2 h-2 bg-red-500 rounded-full"></span>{% endif %}
+                             <i data-lucide="chevron-right" class="w-4 h-4 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Batch List Section -->
+        <div class="mt-12 bg-white rounded-xl shadow-lg p-8">
+            <div class="flex items-center justify-between mb-8 border-b border-gray-100 pb-4">
+                <h2 class="text-xl md:text-2xl font-bold text-gray-800 flex items-center">
+                    <i data-lucide="layers" class="w-6 h-6 mr-3"></i> 기수별 멤버
+                </h2>
+            </div>
+            
+            <div class="space-y-4">
+                {% for batch in batch_list %}
+                <details class="group bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
+                    <summary class="flex items-center justify-between p-5 cursor-pointer list-none select-none hover:bg-gray-100 transition-colors">
+                        <div class="flex items-center">
+                            <span class="text-lg mr-3">{{ batch.name }}</span>
+                            <span class="bg-white border border-gray-200 text-xs font-bold px-2 py-1 rounded-full text-gray-500">{{ batch.count }}명</span>
+                        </div>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180"></i>
+                    </summary>
+                    <div class="p-5 border-t border-gray-100 bg-white">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {% for user in batch.users %}
+                            <div class="grid grid-cols-[5rem_1fr] items-center gap-2 p-4 pl-8 rounded-xl border border-gray-50 bg-gray-50/50 hover:border-gray-200 hover:bg-white transition-all shadow-sm">
+                                <span class="font-bold text-gray-800 text-base truncate">{{ user.nickname }}</span>
+                                <span class="text-sm text-gray-400 font-mono tracking-tighter">{{ user.phone if user.phone else '' }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </details>
+                {% endfor %}
+            </div>
+        </div>
     </div>
 </div>
+
+<!-- Mobile Individual Edit Modal -->
+<div id="edit-user-modal" class="fixed inset-0 bg-black/50 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-[slideUp_0.3s_ease-out]">
+        <!-- Sticky Header -->
+        <div class="p-5 border-b border-gray-50 flex justify-between items-center bg-white sticky top-0 z-10">
+            <h2 class="text-lg font-bold">멤버 정보 수정</h2>
+            <button onclick="closeEditModal()" class="p-2 hover:bg-gray-100 rounded-full transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-6 pt-2">
+            <div id="edit-modal-profile" class="flex items-center gap-4 mb-6 bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                <!-- Populated by JS: Image on left, Name/UID on right -->
+            </div>
+
+            <div class="space-y-4">
+                <input type="hidden" id="edit-uid">
+                <input type="hidden" id="edit-initial-nickname">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">이름</label>
+                    <input type="text" id="edit-nickname-field" placeholder="성함 입력" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-black focus:border-black font-bold text-sm">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">기수</label>
+                    <input type="text" id="edit-batch" onblur="autoFormatBatch(this)" placeholder="YY-MM" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-black focus:border-black font-mono text-sm">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">전화번호</label>
+                    <input type="tel" id="edit-phone" oninput="autoFormatPhone(this)" placeholder="010-0000-0000" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-black focus:border-black font-mono text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">미통보 불참일</label>
+                        <div class="flex flex-col gap-1.5">
+                            <input type="text" id="edit-unnotified-date1" onblur="autoFormatDate(this)" placeholder="YY-MM-DD" class="w-full px-3 py-2 bg-red-50 border border-red-100 text-red-900 rounded-lg focus:ring-red-500 font-mono text-xs text-center">
+                            <input type="text" id="edit-unnotified-date2" onblur="autoFormatDate(this)" placeholder="YY-MM-DD" class="w-full px-3 py-2 bg-red-50 border border-red-100 text-red-900 rounded-lg focus:ring-red-500 font-mono text-xs text-center">
+                        </div>
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1 text-center">병결 여부</label>
+                        <div class="flex-1 flex items-center justify-center bg-blue-50/30 rounded-xl border border-blue-50">
+                            <input type="checkbox" id="edit-sick" class="w-6 h-6 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="saveIndividualEdit()" class="w-full mt-8 py-3.5 bg-black text-white font-bold rounded-2xl hover:bg-gray-800 shadow-lg transition-all text-sm">
+                정보 저장하기
+            </button>
+            
+            <button onclick="triggerDeleteFromModal()" class="w-full mt-4 py-2 text-red-400 text-[10px] font-bold hover:text-red-600 transition-colors uppercase tracking-tighter">
+                이 멤버 영구 삭제하기
+            </button>
+        </div>
+    </div>
+</div>
+    </div>
+</div>
+
+<!-- Attendance Batch Modal -->
+<div id="attend-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
+    <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <!-- Header -->
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+            <div>
+                <h3 class="text-lg font-bold text-gray-400 uppercase tracking-widest text-xs mb-1">Manage Attendance</h3>
+                <h2 id="modal-date-title" class="text-3xl font-black">2026-01-27</h2>
+            </div>
+            <button onclick="closeAttendanceModal()" class="p-2 hover:bg-gray-200 rounded-full transition"><i data-lucide="x" class="w-6 h-6"></i></button>
+        </div>
+        
+        <!-- Status Selector -->
+        <div class="p-6 flex space-x-4 justify-center border-b border-gray-100">
+            <button onclick="setBatchStatus('present')" id="btn-present" class="flex-1 py-3 rounded-xl font-bold border-2 transition-all flex flex-col items-center justify-center gap-1">
+                <i data-lucide="check-circle" class="w-6 h-6"></i> 출석 (Present)
+            </button>
+            <button onclick="setBatchStatus('late')" id="btn-late" class="flex-1 py-3 rounded-xl font-bold border-2 transition-all flex flex-col items-center justify-center gap-1">
+                <i data-lucide="clock" class="w-6 h-6"></i> 지각 (Late)
+            </button>
+            <button onclick="setBatchStatus('absent')" id="btn-absent" class="flex-1 py-3 rounded-xl font-bold border-2 transition-all flex flex-col items-center justify-center gap-1">
+                <i data-lucide="trash-2" class="w-6 h-6"></i> 결석/삭제 (Absent)
+            </button>
+        </div>
+        
+        <!-- Search & List -->
+        <div class="p-4 bg-gray-50 border-b border-gray-100">
+            <input type="text" id="modal-search" oninput="filterModalMembers()" placeholder="Search members by name..." 
+                   class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-black focus:border-black transition">
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-2" id="modal-member-list">
+            <!-- JS Populated -->
+        </div>
+        
+        <!-- Footer -->
+        <div class="p-6 border-t border-gray-100 flex justify-end space-x-4 bg-gray-50">
+            <button onclick="closeAttendanceModal()" class="px-6 py-3 font-bold text-gray-500 hover:bg-gray-200 rounded-xl transition">Cancel</button>
+            <button onclick="applyBatchAttendance()" class="px-8 py-3 bg-black text-white font-bold rounded-xl hover:bg-gray-800 shadow-lg transition flex items-center">
+                Apply Changes <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Data ---
+    const ALL_USERS = [
+        {% for user in all_users_list %}
+        {
+            uid: "{{ user.uid }}",
+            nickname: "{{ user.nickname }}",
+            profile_image: "{{ user.profile_image if user.profile_image else '' }}",
+            batch: "{{ user.batch }}"
+        },
+        {% endfor %}
+    ];
+    
+    let adminCalYear = new Date().getFullYear();
+    let adminCalMonth = new Date().getMonth() + 1;
+    let selectedDate = null;
+    let selectedBatchStatus = 'present'; // Default
+
+    // --- User Info Update Logic (Save Button) ---
+    function autoFormatBatch(input) {
+        let val = input.value.trim();
+        if (!val) return;
+
+        // Extract numbers from something like "2022-10", "22-1", "2210"
+        let parts = val.split('-');
+        let year = "";
+        let month = "";
+
+        if (parts.length === 2) {
+            year = parts[0].replace(/[^0-9]/g, "");
+            month = parts[1].replace(/[^0-9]/g, "");
+        } else {
+            // No hyphen, try to split digits
+            let digits = val.replace(/[^0-9]/g, "");
+            if (digits.length >= 3) {
+                // assume YYM or YYMM or YYYYMM
+                if (digits.length === 3) { // 221 -> 22, 1
+                    year = digits.slice(0, 2);
+                    month = digits.slice(2);
+                } else if (digits.length === 4) { // 2210 -> 22, 10
+                    year = digits.slice(0, 2);
+                    month = digits.slice(2);
+                } else if (digits.length >= 6) { // 202210 -> 22, 10
+                    year = digits.slice(2, 4);
+                    month = digits.slice(4, 6);
+                }
+            }
+        }
+
+        if (year && month) {
+            // Force 2 digit year
+            if (year.length > 2) year = year.slice(-2);
+            // Force 2 digit month with leading zero
+            month = month.padStart(2, '0');
+            if (parseInt(month) > 12) month = "12";
+            if (parseInt(month) === 0) month = "01";
+            
+            input.value = `${year}-${month}`;
+        } else if (val) {
+            alert("기수 형식이 올바르지 않습니다. (예: 22-01)");
+            input.value = "";
+        }
+    }
+
+    function autoFormatDate(input) {
+        let val = input.value.trim();
+        if (!val) return;
+
+        let year = "";
+        let month = "";
+        let day = "";
+
+        let parts = val.split('-');
+        if (parts.length === 3) {
+            year = parts[0].replace(/[^0-9]/g, "");
+            month = parts[1].replace(/[^0-9]/g, "");
+            day = parts[2].replace(/[^0-9]/g, "");
+        } else {
+            let digits = val.replace(/[^0-9]/g, "");
+            if (digits.length === 6) {
+                year = digits.slice(0, 2);
+                month = digits.slice(2, 4);
+                day = digits.slice(4, 6);
+            }
+        }
+
+        if (year && month && day) {
+            if (year.length > 2) year = year.slice(-2);
+            month = month.padStart(2, '0');
+            day = day.padStart(2, '0');
+            
+            // Basic validation
+            if (parseInt(month) > 12) month = "12";
+            if (parseInt(day) > 31) day = "31";
+            
+            input.value = `${year}-${month}-${day}`;
+        } else if (val) {
+            alert("날짜 형식이 올바르지 않습니다. (예: 24-01-20)");
+            input.value = "";
+        }
+    }
+
+    function autoFormatPhone(input) {
+        let numbers = input.value.replace(/[^0-9]/g, "");
+        if (numbers.length > 11) numbers = numbers.slice(0, 11);
+        
+        let formatted = "";
+        if (numbers.length < 4) {
+            formatted = numbers;
+        } else if (numbers.length < 8) {
+            formatted = numbers.slice(0, 3) + "-" + numbers.slice(3);
+        } else {
+            formatted = numbers.slice(0, 3) + "-" + numbers.slice(3, 7) + "-" + numbers.slice(7);
+        }
+        input.value = formatted;
+    }
+
+    async function updateUserInfo(uid) {
+        const nicknameInput = document.getElementById(`nickname-${uid}`);
+        const phoneInput = document.getElementById(`phone-${uid}`);
+        const batchInput = document.getElementById(`batch-${uid}`);
+        const date1Input = document.getElementById(`unnotified-date1-${uid}`);
+        const date2Input = document.getElementById(`unnotified-date2-${uid}`);
+        const sickInput = document.getElementById(`sick-${uid}`);
+        
+        const nickname = nicknameInput.value;
+        const phone = phoneInput.value;
+        const batch = batchInput.value;
+        const date1 = date1Input.value;
+        const date2 = date2Input.value;
+        const isSickLeave = sickInput.checked;
+        
+        const formData = new FormData();
+        formData.append('uid', uid);
+        formData.append('nickname', nickname);
+        formData.append('phone', phone);
+        formData.append('batch', batch);
+        formData.append('unnotified_date1', date1);
+        formData.append('unnotified_date2', date2);
+        formData.append('is_sick_leave', isSickLeave);
+
+        try {
+            const response = await fetch('/admin/api/user/update', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            
+            if (response.ok) {
+                alert(`✅ 저장되었습니다.`);
+                window.location.reload(); 
+            } else {
+                alert("❌ 오류: " + data.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert("네트워크 오류가 발생했습니다.");
+        }
+    }
+
+    // --- Mobile Edit Modal Logic ---
+    function openEditModal(uid, nickname, initialNickname, batch, phone, date1, date2, isSick, profileImg) {
+        document.getElementById('edit-uid').value = uid;
+        const nickInput = document.getElementById('edit-nickname-field');
+        nickInput.value = nickname;
+        nickInput.placeholder = initialNickname; // Set placeholder to original name
+        
+        document.getElementById('edit-initial-nickname').value = initialNickname;
+        document.getElementById('edit-batch').value = batch && batch !== 'None' ? batch : '';
+        document.getElementById('edit-phone').value = phone && phone !== 'None' ? phone : '';
+        document.getElementById('edit-unnotified-date1').value = date1 && date1 !== 'None' ? date1 : '';
+        document.getElementById('edit-unnotified-date2').value = date2 && date2 !== 'None' ? date2 : '';
+        document.getElementById('edit-sick').checked = isSick;
+        
+        // Profile Display (Horizontal)
+        const imgUrl = profileImg || `https://ui-avatars.com/api/?name=${nickname}&background=random`;
+        document.getElementById('edit-modal-profile').innerHTML = `
+            <img src="${imgUrl}" class="w-16 h-16 rounded-full border-2 border-white shadow-md object-cover bg-gray-200 shrink-0">
+            <div class="flex flex-col">
+                <h3 class="text-xl font-black text-gray-800 leading-tight">${nickname}</h3>
+                <p class="text-xs text-gray-400 font-mono">#${uid}</p>
+            </div>
+        `;
+        
+        document.getElementById('edit-user-modal').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+        document.getElementById('edit-user-modal').classList.add('hidden');
+    }
+
+    function triggerDeleteFromModal() {
+        const uid = document.getElementById('edit-uid').value;
+        const nickname = document.getElementById('edit-nickname-field').value;
+        deleteUser(uid, nickname);
+    }
+
+    async function deleteUser(uid, nickname) {
+        if (!confirm(`❗ 경고: 정말 [${nickname}] 멤버를 삭제하시겠습니까?`)) return;
+        if (!confirm(`⚠️ 마지막 경고: 삭제된 데이터(출석 기록 포함)는 절대 복구할 수 없습니다.\n\n정말로 삭제하시겠습니까?`)) return;
+
+        const formData = new FormData();
+        formData.append('uid', uid);
+
+        try {
+            const response = await fetch('/admin/api/user/delete', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            
+            if (response.ok) {
+                alert(`🗑️ 삭제되었습니다: ${data.message}`);
+                window.location.reload(); 
+            } else {
+                alert("❌ 오류: " + data.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert("네트워크 오류가 발생했습니다.");
+        }
+    }
+
+    async function saveIndividualEdit() {
+        const uid = document.getElementById('edit-uid').value;
+        const nickname = document.getElementById('edit-nickname-field').value;
+        const phone = document.getElementById('edit-phone').value;
+        const batch = document.getElementById('edit-batch').value;
+        const date1 = document.getElementById('edit-unnotified-date1').value;
+        const date2 = document.getElementById('edit-unnotified-date2').value;
+        const isSickLeave = document.getElementById('edit-sick').checked;
+        
+        const formData = new FormData();
+        formData.append('uid', uid);
+        formData.append('nickname', nickname);
+        formData.append('phone', phone);
+        formData.append('batch', batch);
+        formData.append('unnotified_date1', date1);
+        formData.append('unnotified_date2', date2);
+        formData.append('is_sick_leave', isSickLeave);
+
+        try {
+            const response = await fetch('/admin/api/user/update', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            
+            if (response.ok) {
+                alert(`✅ 저장되었습니다.`);
+                window.location.reload(); 
+            } else {
+                alert("❌ 오류: " + data.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert("네트워크 오류가 발생했습니다.");
+        }
+    }
+
+    // --- Calendar Logic ---
+    function initAdminCalendar() {
+        renderAdminCalendar(adminCalYear, adminCalMonth);
+    }
+    
+    function changeAdminMonth(delta) {
+        let newDate = new Date(adminCalYear, adminCalMonth - 1 + delta, 1);
+        adminCalYear = newDate.getFullYear();
+        adminCalMonth = newDate.getMonth() + 1;
+        renderAdminCalendar(adminCalYear, adminCalMonth);
+    }
+
+    function renderAdminCalendar(year, month) {
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        document.getElementById('admin-cal-month').textContent = `${monthNames[month-1]} ${year}`;
+        
+        const firstDay = new Date(year, month - 1, 1).getDay(); // 0(Sun) - 6(Sat)
+        // Adjust for Mon start (0: Mon, 6: Sun)
+        const startOffset = (firstDay + 6) % 7; 
+        
+        const daysInMonth = new Date(year, month, 0).getDate();
+        const grid = document.getElementById('admin-calendar-grid');
+        grid.innerHTML = '';
+        
+        // Empty slots
+        for(let i=0; i<startOffset; i++) {
+            grid.innerHTML += `<div class="aspect-square"></div>`;
+        }
+        
+        const today = new Date();
+        const isCurrentMonth = (today.getFullYear() === year && today.getMonth() + 1 === month);
+
+        for(let d=1; d<=daysInMonth; d++) {
+            const dateObj = new Date(year, month - 1, d);
+            const dayOfWeek = dateObj.getDay(); // 0: Sun, 6: Sat
+            const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+            const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            
+            let classes = "bg-gray-50 text-gray-400";
+            let clickAttr = "";
+            
+            if (isWeekend) {
+                classes = "bg-white border-2 border-gray-100 text-black hover:border-black cursor-pointer shadow-sm";
+                clickAttr = `onclick="openAttendanceModal('${dateStr}')"`;
+            }
+            
+            if (isCurrentMonth && d === today.getDate()) {
+                classes += " ring-2 ring-blue-500 ring-offset-2";
+            }
+
+            grid.innerHTML += `
+                <div class="aspect-square rounded-md flex items-center justify-center font-bold text-xs transition-transform hover:scale-110 ${classes}" ${clickAttr}>
+                    ${d}
+                </div>
+            `;
+        }
+    }
+
+    // --- Modal Logic ---
+    async function openAttendanceModal(dateStr) {
+        selectedDate = dateStr;
+        document.getElementById('modal-date-title').textContent = dateStr;
+        document.getElementById('attend-modal').classList.remove('hidden');
+        setBatchStatus('present'); // Reset to present
+        
+        // Fetch current status for this date
+        const listContainer = document.getElementById('modal-member-list');
+        listContainer.innerHTML = '<div class="p-8 text-center text-gray-400"><i class="animate-spin w-8 h-8 mx-auto mb-2" data-lucide="loader"></i>Loading data...</div>';
+        lucide.createIcons();
+        
+        try {
+            const res = await fetch(`/admin/api/attendance/daily?date=${dateStr}`);
+            const statusMap = await res.json(); // { uid: 'present', ... }
+            renderModalList(statusMap);
+        } catch (e) {
+            console.error(e);
+            listContainer.innerHTML = '<p class="text-red-500 text-center p-4">Error loading data.</p>';
+        }
+    }
+    
+    function closeAttendanceModal() {
+        document.getElementById('attend-modal').classList.add('hidden');
+        selectedDate = null;
+    }
+    
+    function setBatchStatus(status) {
+        selectedBatchStatus = status;
+        
+        // Reset styles
+        ['present', 'late', 'absent'].forEach(s => {
+            const btn = document.getElementById(`btn-${s}`);
+            btn.className = "flex-1 py-3 rounded-xl font-bold border-2 transition-all flex flex-col items-center justify-center gap-1 opacity-50 border-gray-200 text-gray-400 hover:opacity-100";
+        });
+        
+        // Active style
+        const activeBtn = document.getElementById(`btn-${status}`);
+        activeBtn.classList.remove('opacity-50', 'border-gray-200', 'text-gray-400');
+        
+        if(status === 'present') activeBtn.classList.add('border-black', 'bg-black', 'text-white');
+        else if(status === 'late') activeBtn.classList.add('border-yellow-500', 'bg-yellow-50', 'text-yellow-600');
+        else activeBtn.classList.add('border-red-500', 'bg-red-50', 'text-red-600');
+    }
+    
+    function renderModalList(statusMap) {
+        const container = document.getElementById('modal-member-list');
+        container.innerHTML = '';
+        
+        // Sort: Purely by Nickname (alphabetical)
+        const sortedUsers = [...ALL_USERS].sort((a, b) => {
+            return a.nickname.localeCompare(b.nickname);
+        });
+
+        sortedUsers.forEach(user => {
+            const currentStatus = statusMap[user.uid]; // 'present', 'late' or undefined
+            let badge = '';
+            if (currentStatus === 'present') badge = '<span class="ml-2 px-2 py-0.5 bg-black text-white text-[10px] font-bold rounded uppercase">Present</span>';
+            else if (currentStatus === 'late') badge = '<span class="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-[10px] font-bold rounded uppercase">Late</span>';
+            
+            const item = `
+                <label class="flex items-center p-3 hover:bg-gray-50 rounded-lg cursor-pointer border-b border-gray-50 transition member-item" data-name="${user.nickname.toLowerCase()}">
+                    <input type="checkbox" value="${user.uid}" class="batch-checkbox w-5 h-5 text-black border-gray-300 rounded focus:ring-black mr-4">
+                    <img src="${user.profile_image || ('https://ui-avatars.com/api/?name='+user.nickname)}" class="w-8 h-8 rounded-full bg-gray-200 mr-3">
+                    <div class="flex-1">
+                        <span class="font-bold text-gray-800">${user.nickname}</span>
+                        ${badge}
+                        <span class="text-[10px] text-gray-400 block">${user.batch || '-'}</span>
+                    </div>
+                </label>
+            `;
+            container.innerHTML += item;
+        });
+    }
+    
+    function filterModalMembers() {
+        const query = document.getElementById('modal-search').value.toLowerCase();
+        document.querySelectorAll('.member-item').forEach(item => {
+            const name = item.getAttribute('data-name');
+            if (name.includes(query)) item.classList.remove('hidden');
+            else item.classList.add('hidden');
+        });
+    }
+    
+    async function applyBatchAttendance() {
+        if (!selectedDate) return;
+        
+        const checkedBoxes = document.querySelectorAll('.batch-checkbox:checked');
+        const userIds = Array.from(checkedBoxes).map(cb => cb.value);
+        
+        if (userIds.length === 0) {
+            alert("Please select at least one member.");
+            return;
+        }
+        
+        if (!confirm(`Apply '${selectedBatchStatus.toUpperCase()}' to ${userIds.length} members for ${selectedDate}?`)) return;
+        
+        try {
+            const res = await fetch('/admin/api/attendance/batch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    date: selectedDate,
+                    user_ids: userIds,
+                    status: selectedBatchStatus
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert("Updated successfully!");
+                openAttendanceModal(selectedDate);
+            } else {
+                alert("Error: " + data.message);
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Network error.");
+        }
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+        initAdminCalendar();
+    });
+</script>
 {% endblock %}

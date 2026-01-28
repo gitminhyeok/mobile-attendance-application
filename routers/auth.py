@@ -84,18 +84,27 @@ def allback(code: str, request: Request, response: Response):
     db = get_db()
     if db:
         user_ref = db.collection("users").document(kakao_uid)
-        user_data = {
-            "uid": kakao_uid,
-            "nickname": nickname, # Always update nickname
-            "profile_image": profile_image,
-            "last_login": firestore.SERVER_TIMESTAMP
-        }
-        # Use set with merge=True to update existing or create new
-        user_ref.set(user_data, merge=True)
+        user_doc = user_ref.get()
         
-        # Check if created_at exists, if not add it (only for new users)
-        # Note: set with merge doesn't easily allow "only if not exists" for one field without reading first.
-        # For simplicity in this MVP, we just update basic info.
+        if not user_doc.exists:
+            # New User: Store initial info
+            user_data = {
+                "uid": kakao_uid,
+                "nickname": nickname, # Initial display name
+                "initial_nickname": nickname, # Permanent record of original name
+                "profile_image": profile_image,
+                "created_at": firestore.SERVER_TIMESTAMP,
+                "last_login": firestore.SERVER_TIMESTAMP
+            }
+            user_ref.set(user_data)
+        else:
+            # Existing User: Update profile image and last login only
+            # Do NOT update nickname, as Admin might have changed it to a real name
+            update_data = {
+                "profile_image": profile_image,
+                "last_login": firestore.SERVER_TIMESTAMP
+            }
+            user_ref.update(update_data)
         
     # 5. Create Session (Simple Cookie for MVP)
     # In a real app, you'd generate a session ID or JWT and store it.
