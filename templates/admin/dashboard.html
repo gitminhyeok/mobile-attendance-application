@@ -189,40 +189,40 @@
                             <td class="py-4 pl-4">
                                 <div class="flex items-center">
                                     <img src="{{ user.profile_image if user.profile_image else 'https://ui-avatars.com/api/?name=' + user.nickname + '&background=random' }}" 
-                                         alt="{{ user.nickname }}" 
-                                         class="w-10 h-10 rounded-full object-cover mr-3 border border-gray-200 bg-gray-100">
+                                        alt="{{ user.nickname }}" 
+                                        class="w-10 h-10 rounded-full object-cover mr-3 border border-gray-200 bg-gray-100">
                                     <div class="flex flex-col">
                                         <input type="text" id="nickname-{{ user.uid }}" value="{{ user.nickname }}" placeholder="{{ user.initial_nickname }}"
-                                               class="bg-transparent border-b border-transparent focus:border-black font-bold text-gray-800 text-sm focus:outline-none p-0 w-24">
+                                            class="bg-transparent border-b border-transparent focus:border-black font-bold text-gray-800 text-sm focus:outline-none p-0 w-24">
                                         <p class="text-[10px] text-gray-400 font-mono">#{{ user.uid }}</p>
                                     </div>
                                 </div>
                             </td>
                             <td class="py-4">
                                 <input type="text" id="batch-{{ user.uid }}" value="{{ user.batch }}" placeholder="YY-MM"
-                                       onblur="autoFormatBatch(this)"
-                                       class="bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-lg focus:ring-black focus:border-black block w-24 p-2.5 font-mono"
-                                       maxlength="7">
+                                    onblur="autoFormatBatch(this)"
+                                    class="bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-lg focus:ring-black focus:border-black block w-24 p-2.5 font-mono"
+                                    maxlength="7">
                             </td>
                             <td class="py-4">
                                 <input type="tel" id="phone-{{ user.uid }}" value="{{ user.phone }}" placeholder="010-0000-0000"
-                                       oninput="autoFormatPhone(this)"
-                                       class="bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-lg focus:ring-black focus:border-black block w-32 p-2.5 font-mono"
-                                       maxlength="13">
+                                    oninput="autoFormatPhone(this)"
+                                    class="bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-lg focus:ring-black focus:border-black block w-32 p-2.5 font-mono"
+                                    maxlength="13">
                             </td>
                             <td class="py-4 text-center">
                                 <div class="flex flex-col gap-1 items-center">
                                     <input type="text" id="unnotified-date1-{{ user.uid }}" value="{{ user.unnotified_date1 }}" placeholder="YY-MM-DD"
-                                           onblur="autoFormatDate(this)"
-                                           class="bg-red-50 border border-red-100 text-red-900 text-[10px] rounded-md w-20 p-1 text-center font-bold focus:ring-red-500">
+                                        onblur="autoFormatDate(this)"
+                                        class="bg-red-50 border border-red-100 text-red-900 text-[10px] rounded-md w-20 p-1 text-center font-bold focus:ring-red-500">
                                     <input type="text" id="unnotified-date2-{{ user.uid }}" value="{{ user.unnotified_date2 }}" placeholder="YY-MM-DD"
-                                           onblur="autoFormatDate(this)"
-                                           class="bg-red-50 border border-red-100 text-red-900 text-[10px] rounded-md w-20 p-1 text-center font-bold focus:ring-red-500">
+                                        onblur="autoFormatDate(this)"
+                                        class="bg-red-50 border border-red-100 text-red-900 text-[10px] rounded-md w-20 p-1 text-center font-bold focus:ring-red-500">
                                 </div>
                             </td>
                             <td class="py-4 text-center">
                                 <input type="checkbox" id="sick-{{ user.uid }}" {{ 'checked' if user.is_sick_leave else '' }}
-                                       class="w-6 h-6 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 mx-auto block">
+                                    class="w-6 h-6 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 mx-auto block">
                             </td>
                             <td class="py-4 text-center">
                                 <span class="text-xs font-bold {{ 'text-red-500' if user.days_absent >= 14 else 'text-gray-500' }}">
@@ -253,10 +253,10 @@
             <div class="md:hidden space-y-4">
                 {% for user in all_users_list %}
                 <div onclick="openEditModal('{{ user.uid }}', '{{ user.nickname }}', '{{ user.initial_nickname }}', '{{ user.batch }}', '{{ user.phone }}', '{{ user.unnotified_date1 }}', '{{ user.unnotified_date2 }}', {{ 'true' if user.is_sick_leave else 'false' }}, '{{ user.profile_image if user.profile_image else '' }}', '{{ user.is_auth }}')" 
-                     class="p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between active:scale-95 transition-transform cursor-pointer">
+                    class="p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between active:scale-95 transition-transform cursor-pointer">
                     <div class="flex items-center">
                         <img src="{{ user.profile_image if user.profile_image else 'https://ui-avatars.com/api/?name=' + user.nickname + '&background=random' }}" 
-                             class="w-12 h-12 rounded-full mr-4 border border-white shadow-sm object-cover bg-gray-200">
+                            class="w-12 h-12 rounded-full mr-4 border border-white shadow-sm object-cover bg-gray-200">
                         <div>
                             <p class="font-bold text-gray-800">{{ user.nickname }}</p>
                             <p class="text-[10px] text-gray-400">기수: {{ user.batch if user.batch else '-' }}</p>
@@ -267,9 +267,9 @@
                             {{ user.last_date }}
                         </span>
                         <div class="flex items-center justify-end mt-1 gap-1">
-                             {% if user.is_sick_leave %}<span class="w-2 h-2 bg-blue-500 rounded-full"></span>{% endif %}
-                             {% if user.unnotified_count > 0 %}<span class="w-2 h-2 bg-red-500 rounded-full"></span>{% endif %}
-                             <i data-lucide="chevron-right" class="w-4 h-4 text-gray-300"></i>
+                            {% if user.is_sick_leave %}<span class="w-2 h-2 bg-blue-500 rounded-full"></span>{% endif %}
+                            {% if user.unnotified_count > 0 %}<span class="w-2 h-2 bg-red-500 rounded-full"></span>{% endif %}
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -405,7 +405,7 @@
         <!-- Search & List -->
         <div class="p-4 bg-gray-50 border-b border-gray-100">
             <input type="text" id="modal-search" oninput="filterModalMembers()" placeholder="이름으로 검색" 
-                   class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-black focus:border-black transition">
+                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-black focus:border-black transition">
         </div>
         
         <div class="flex-1 overflow-y-auto p-2" id="modal-member-list">
