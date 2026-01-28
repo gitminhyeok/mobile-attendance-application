@@ -20,9 +20,9 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {% for user in pending_list %}
                 <div onclick="openEditModal('{{ user.uid }}', '{{ user.nickname }}', '{{ user.initial_nickname }}', '{{ user.batch }}', '{{ user.phone }}', '{{ user.unnotified_date1 }}', '{{ user.unnotified_date2 }}', {{ 'true' if user.is_sick_leave else 'false' }}, '{{ user.profile_image if user.profile_image else '' }}', '{{ user.is_auth }}')" 
-                     class="flex items-center p-4 bg-purple-50 rounded-xl border border-purple-100 hover:bg-purple-100 cursor-pointer transition-colors shadow-sm">
+                    class="flex items-center p-4 bg-purple-50 rounded-xl border border-purple-100 hover:bg-purple-100 cursor-pointer transition-colors shadow-sm">
                     <img src="{{ user.profile_image if user.profile_image else 'https://ui-avatars.com/api/?name=' + user.nickname + '&background=random' }}" 
-                         class="w-10 h-10 rounded-full mr-3 border border-white shadow-sm object-cover">
+                        class="w-10 h-10 rounded-full mr-3 border border-white shadow-sm object-cover">
                     <div>
                         <p class="font-bold text-gray-800">{{ user.nickname }}</p>
                     </div>
@@ -145,9 +145,9 @@
                     <i data-lucide="calendar-check" class="w-6 h-6 mr-3"></i> 수기 출석 관리
                 </h2>
                 <div class="flex items-center space-x-6">
-                     <button onclick="changeAdminMonth(-1)" class="p-3 hover:bg-gray-100 rounded-full transition-colors"><i data-lucide="chevron-left" class="w-6 h-6"></i></button>
-                     <span id="admin-cal-month" class="text-xl font-bold w-40 text-center tracking-tight"></span>
-                     <button onclick="changeAdminMonth(1)" class="p-3 hover:bg-gray-100 rounded-full transition-colors"><i data-lucide="chevron-right" class="w-6 h-6"></i></button>
+                    <button onclick="changeAdminMonth(-1)" class="p-3 hover:bg-gray-100 rounded-full transition-colors"><i data-lucide="chevron-left" class="w-6 h-6"></i></button>
+                    <span id="admin-cal-month" class="text-xl font-bold w-40 text-center tracking-tight"></span>
+                    <button onclick="changeAdminMonth(1)" class="p-3 hover:bg-gray-100 rounded-full transition-colors"><i data-lucide="chevron-right" class="w-6 h-6"></i></button>
                 </div>
             </div>
             
