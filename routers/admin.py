@@ -213,86 +213,11 @@ async def admin_dashboard(request: Request):
     if not is_admin(request):
         return RedirectResponse("/") 
 
+    uid = request.cookies.get("user_uid") # Get current admin's UID
     db = get_db()
     if not db:
         return HTMLResponse("Database Error", status_code=500)
 
-    users_ref = db.collection("users").stream()
-    warning_list = []
-    dropout_list = []
-    sick_list = []
-    all_users_list = []
-    
-    now = get_current_kst_time()
-    today = now.date()
-    
-    for user_doc in users_ref:
-        user_data = user_doc.to_dict()
-        uid = user_data.get("uid")
-        nickname = user_data.get("nickname", "Unknown")
-        initial_nickname = user_data.get("initial_nickname", nickname) # Fallback to current nickname
-        phone = user_data.get("phone", "")
-        batch = user_data.get("batch", "")
-        profile_image = user_data.get("profile_image", "")
-        
-        # New Fields for Unnotified Dates
-        unnotified_date1 = user_data.get("unnotified_date1", "")
-        unnotified_date2 = user_data.get("unnotified_date2", "")
-        is_sick_leave = user_data.get("is_sick_leave", False)
-        
-        # Calculate count based on dates
-        unnotified_count = 0
-        if unnotified_date1: unnotified_count += 1
-        if unnotified_date2: unnotified_count += 1
-        
-        # Get last attendance
-        last_attend_doc = (
-            db.collection("attendance")
-            .where(filter=FieldFilter("user_id", "==", uid))
-            .order_by("date", direction="DESCENDING")
-            .limit(1)
-            .stream()
-        )
-        
-        last_date_str = "Never"
-        days_absent = 999
-        
-        last_attend_list = list(last_attend_doc)
-        if last_attend_list:
-            data = last_attend_list[0].to_dict()
-            last_date_str = data['date']
-            last_date = datetime.strptime(last_date_str, "%Y-%m-%d").date()
-            days_absent = (today - last_date).days
-            
-        user_info = {
-            "uid": uid,
-            "nickname": nickname,
-            "initial_nickname": initial_nickname, # Added
-            "profile_image": profile_image,
-            "days_absent": days_absent,
-            "last_date": last_date_str,
-            "phone": phone,
-            "batch": batch,
-            "unnotified_date1": unnotified_date1,
-            "unnotified_date2": unnotified_date2,
-            "unnotified_count": unnotified_count,
-            "is_sick_leave": is_sick_leave
-        }
-        
-        all_users_list.append(user_info)
-
-        if is_sick_leave:
-            sick_list.append(user_info)
-        else:
-            if days_absent >= 21 or unnotified_count >= 2:
-                if unnotified_count >= 2: user_info['reason'] = f"미통보 불참 ({unnotified_date1}, {unnotified_date2})"
-                else: user_info['reason'] = "장기 결석 (3주+)"
-                dropout_list.append(user_info)
-            elif days_absent >= 14 or unnotified_count >= 1:
-                if unnotified_count >= 1: user_info['reason'] = f"미통보 불참 ({unnotified_date1})"
-                else: user_info['reason'] = "2주 이상 결석"
-                warning_list.append(user_info)
-            
     users_ref = db.collection("users").stream()
     warning_list = []
     dropout_list = []
@@ -305,7 +230,7 @@ async def admin_dashboard(request: Request):
     
     for user_doc in users_ref:
         user_data = user_doc.to_dict()
-        uid = user_data.get("uid")
+        user_id = user_data.get("uid")
         nickname = user_data.get("nickname", "Unknown")
         initial_nickname = user_data.get("initial_nickname", nickname)
         phone = user_data.get("phone", "")
@@ -328,7 +253,7 @@ async def admin_dashboard(request: Request):
         # Get last attendance
         last_attend_doc = (
             db.collection("attendance")
-            .where(filter=FieldFilter("user_id", "==", uid))
+            .where(filter=FieldFilter("user_id", "==", user_id))
             .order_by("date", direction="DESCENDING")
             .limit(1)
             .stream()
@@ -345,7 +270,7 @@ async def admin_dashboard(request: Request):
             days_absent = (today - last_date).days
             
         user_info = {
-            "uid": uid,
+            "uid": user_id,
             "nickname": nickname,
             "initial_nickname": initial_nickname,
             "profile_image": profile_image,
@@ -377,7 +302,7 @@ async def admin_dashboard(request: Request):
                 user_info['reason'] = " & ".join(reasons)
                 dropout_list.append(user_info)
             
-            # Warning Criteria: Only 14+ days absence (Unnotified 1-time ignored as requested)
+            # Warning Criteria: Only 14+ days absence
             elif days_absent >= 14:
                 user_info['reason'] = "2주 이상 결석"
                 warning_list.append(user_info)
@@ -417,6 +342,7 @@ async def admin_dashboard(request: Request):
 
     context = {
         "request": request,
+        "uid": uid, # Passed to base.html for LOGOUT button
         "warning_list": warning_list,
         "dropout_list": dropout_list,
         "sick_list": sick_list,
