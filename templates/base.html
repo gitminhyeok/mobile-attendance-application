@@ -82,7 +82,7 @@
                 <!-- Navigation Menu (Visible on Mobile with smaller scale) -->
                 <nav class="flex items-center space-x-4 md:space-x-12 ml-4">
                     <a href="/" class="text-[10px] md:text-sm font-semibold hover-underline tracking-tight">HOME</a>
-                    {% if uid and not is_pending %}
+                    {% if uid and not is_pending and not is_admin_page %}
                         <a href="#record" class="text-[10px] md:text-sm font-semibold hover-underline tracking-tight">RECORD</a>
                         <a href="#ranking" class="text-[10px] md:text-sm font-semibold hover-underline tracking-tight">RANKING</a>
                     {% endif %}

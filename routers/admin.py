@@ -342,7 +342,8 @@ async def admin_dashboard(request: Request):
 
     context = {
         "request": request,
-        "uid": uid, # Passed to base.html for LOGOUT button
+        "uid": uid, 
+        "is_admin_page": True, # Flag to hide Record/Ranking in nav
         "warning_list": warning_list,
         "dropout_list": dropout_list,
         "sick_list": sick_list,
