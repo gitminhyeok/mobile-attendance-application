@@ -243,22 +243,70 @@ async def read_root(request: Request): # Removed query params from root
         # Get Total Stats (Separate query for total count)
         # Optimization: In real app, store totals on user doc. Here we count.
         
-        # Calculate totals from ALL history stream
-        docs = db.collection("attendance").where(filter=FieldFilter("user_id", "==", uid)).stream()
+        # Calculate totals and streak from ALL history
+        docs = db.collection("attendance").where(filter=FieldFilter("user_id", "==", uid)).order_by("date", direction="ASCENDING").stream()
         
+        all_dates = []
         for doc in docs:
             data = doc.to_dict()
-            if data['date'] == today_str:
+            date_str = data['date']
+            all_dates.append(date_str)
+            
+            if date_str == today_str:
                 already_attended = True
             
             my_record["total_attendance"] += 1
             my_record["total_points"] += data.get("point", 0)
             
-            if data['date'].startswith(current_month_prefix):
+            if date_str.startswith(current_month_prefix):
                 my_record["current_month_count"] += 1
         
+        # Calculate Longest Weekly Streak
+        max_streak = 0
+        current_streak = 0
+        streak_end_date = ""
+        
+        if all_dates:
+            # Get unique ISO weeks: set of (year, week)
+            attended_weeks = sorted(list(set([datetime.strptime(d, "%Y-%m-%d").isocalendar()[:2] for d in all_dates])))
+            
+            if attended_weeks:
+                current_streak = 1
+                max_streak = 1
+                streak_end_date = all_dates[0] # Initial
+                
+                for i in range(1, len(attended_weeks)):
+                    prev_w = attended_weeks[i-1]
+                    curr_w = attended_weeks[i]
+                    
+                    # Check if consecutive week
+                    # (Handles year change: e.g., 2025-W52 to 2026-W01)
+                    d1 = datetime.fromisocalendar(prev_w[0], prev_w[1], 1)
+                    d2 = datetime.fromisocalendar(curr_w[0], curr_w[1], 1)
+                    
+                    if (d2 - d1).days == 7:
+                        current_streak += 1
+                    else:
+                        current_streak = 1
+                    
+                    if current_streak >= max_streak:
+                        max_streak = current_streak
+                        # Find the last date in all_dates that belongs to this week
+                        week_dates = [d for d in all_dates if datetime.strptime(d, "%Y-%m-%d").isocalendar()[:2] == curr_w]
+                        if week_dates:
+                            streak_end_date = week_dates[-1]
+
         my_record["attendance_rate"] = int((my_record["current_month_count"] / valid_days_count) * 100)
-        my_record["current_streak"] = my_record["current_month_count"] 
+        my_record["current_streak"] = max_streak
+        # Format date to YY.MM.DD
+        if streak_end_date:
+            try:
+                dt_obj = datetime.strptime(streak_end_date, "%Y-%m-%d")
+                my_record["streak_date"] = dt_obj.strftime("%y.%m.%d")
+            except:
+                my_record["streak_date"] = streak_end_date
+        else:
+            my_record["streak_date"] = ""
 
     # 4. Determine Status Message
     status_message = "첫 출석을 기다리고 있어요 🌱"
