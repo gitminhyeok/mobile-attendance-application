@@ -389,6 +389,7 @@ async def read_root(request: Request): # Removed query params from root
         "ranking_list": ranking_list,
         "valid_days_count": valid_days_count,
         "current_month_name": now.strftime("%B %Y"),
+        "current_month_num": now.month, # Added month number
         "initial_year": now.year,
         "initial_month": now.month,
         "kakao_js_key": os.getenv("KAKAO_JS_KEY"),
