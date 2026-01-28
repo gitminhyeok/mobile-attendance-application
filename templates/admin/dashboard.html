@@ -541,15 +541,12 @@
 
     function copyWarningNames(btn) {
         const names = btn.getAttribute('data-names');
-        if (!names) {
-            alert("복사할 이름이 없습니다.");
-            return;
-        }
+        if (!names) return;
         
         // Try modern API first (Works on localhost/HTTPS)
         if (navigator.clipboard && window.isSecureContext) {
             navigator.clipboard.writeText(names).then(() => {
-                alert("경고 대상자 명단이 복사되었습니다.");
+                // Success - Silent
             }).catch(err => {
                 console.error('Async: Could not copy text: ', err);
                 fallbackCopyTextToClipboard(names);
@@ -574,12 +571,9 @@
         textArea.select();
         
         try {
-            var successful = document.execCommand('copy');
-            if(successful) alert("경고 대상자 명단이 복사되었습니다.");
-            else alert("복사에 실패했습니다.");
+            document.execCommand('copy');
         } catch (err) {
             console.error('Fallback: Oops, unable to copy', err);
-            alert("복사를 지원하지 않는 브라우저입니다.");
         }
         
         document.body.removeChild(textArea);
