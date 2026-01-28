@@ -7,12 +7,40 @@
     <div class="max-w-6xl mx-auto">
         <h1 class="text-3xl text-gray-800 mb-8 uppercase tracking-widest">Admin Dashboard</h1>
 
+        <!-- Pending Approval Zone (Purple) -->
+        {% if pending_list %}
+        <div class="mb-12 bg-white rounded-xl shadow-lg border-t-8 border-purple-600 p-6 animate-pulse">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-purple-600 flex items-center">
+                    <i data-lucide="user-plus" class="w-6 h-6 mr-2"></i> 가입 승인 대기
+                </h2>
+                <span class="bg-purple-100 text-purple-800 text-xs font-bold px-3 py-1 rounded-full">{{ total_pending }}명 대기중</span>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {% for user in pending_list %}
+                <div onclick="openEditModal('{{ user.uid }}', '{{ user.nickname }}', '{{ user.initial_nickname }}', '{{ user.batch }}', '{{ user.phone }}', '{{ user.unnotified_date1 }}', '{{ user.unnotified_date2 }}', {{ 'true' if user.is_sick_leave else 'false' }}, '{{ user.profile_image if user.profile_image else '' }}', '{{ user.is_auth }}')" 
+                     class="flex items-center p-4 bg-purple-50 rounded-xl border border-purple-100 hover:bg-purple-100 cursor-pointer transition-colors shadow-sm">
+                    <img src="{{ user.profile_image if user.profile_image else 'https://ui-avatars.com/api/?name=' + user.nickname + '&background=random' }}" 
+                         class="w-10 h-10 rounded-full mr-3 border border-white shadow-sm object-cover">
+                    <div>
+                        <p class="font-bold text-gray-800">{{ user.nickname }}</p>
+                    </div>
+                    <div class="ml-auto">
+                        <span class="bg-purple-600 text-white text-[10px] font-bold px-2 py-1 rounded-full">승인 필요</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <!-- Dropout Zone (Red) -->
             <div class="bg-white rounded-xl shadow-lg border-t-8 border-red-600 p-6">
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-xl font-bold text-red-600 flex items-center">
-                        <i data-lucide="skull" class="w-6 h-6 mr-2"></i> 퇴출 예정
+                        <i data-lucide="skull" class="w-6 h-6 mr-2"></i> 퇴출 대상
                     </h2>
                     <span class="bg-red-100 text-red-800 text-xs font-bold px-3 py-1 rounded-full">{{ total_dropout }}</span>
                 </div>
@@ -45,7 +73,16 @@
                     <h2 class="text-xl font-bold text-yellow-600 flex items-center">
                         <i data-lucide="alert-triangle" class="w-6 h-6 mr-2"></i> 경고 대상
                     </h2>
-                    <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-3 py-1 rounded-full">{{ total_warning }}</span>
+                    <div class="flex items-center space-x-2">
+                        {% if warning_list %}
+                        <button onclick="copyWarningNames(this)" 
+                                data-names="{{ warning_list | map(attribute='nickname') | join(' ') }}"
+                                class="p-1.5 bg-yellow-100 text-yellow-700 rounded-md hover:bg-yellow-200 transition-colors" title="Copy Names">
+                            <i data-lucide="copy" class="w-4 h-4"></i>
+                        </button>
+                        {% endif %}
+                        <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-3 py-1 rounded-full">{{ total_warning }}</span>
+                    </div>
                 </div>
 
                 <div class="overflow-y-auto max-h-[500px]">
@@ -195,6 +232,7 @@
                             </td>
                             <td class="py-4 text-center">
                                 <div class="flex items-center justify-center space-x-2">
+                                    <input type="hidden" id="is_auth-{{ user.uid }}" value="{{ user.is_auth }}">
                                     <button onclick="updateUserInfo('{{ user.uid }}')" 
                                             class="bg-black text-white hover:bg-gray-800 text-xs font-bold py-2 px-4 rounded-lg transition-colors shadow-sm">
                                         저장
@@ -214,7 +252,7 @@
             <!-- Mobile Card View (Shown only on mobile) -->
             <div class="md:hidden space-y-4">
                 {% for user in all_users_list %}
-                <div onclick="openEditModal('{{ user.uid }}', '{{ user.nickname }}', '{{ user.initial_nickname }}', '{{ user.batch }}', '{{ user.phone }}', '{{ user.unnotified_date1 }}', '{{ user.unnotified_date2 }}', {{ 'true' if user.is_sick_leave else 'false' }}, '{{ user.profile_image if user.profile_image else '' }}')" 
+                <div onclick="openEditModal('{{ user.uid }}', '{{ user.nickname }}', '{{ user.initial_nickname }}', '{{ user.batch }}', '{{ user.phone }}', '{{ user.unnotified_date1 }}', '{{ user.unnotified_date2 }}', {{ 'true' if user.is_sick_leave else 'false' }}, '{{ user.profile_image if user.profile_image else '' }}', '{{ user.is_auth }}')" 
                      class="p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between active:scale-95 transition-transform cursor-pointer">
                     <div class="flex items-center">
                         <img src="{{ user.profile_image if user.profile_image else 'https://ui-avatars.com/api/?name=' + user.nickname + '&background=random' }}" 
@@ -320,7 +358,13 @@
                 </div>
             </div>
 
-            <button onclick="saveIndividualEdit()" class="w-full mt-8 py-3.5 bg-black text-white font-bold rounded-2xl hover:bg-gray-800 shadow-lg transition-all text-sm">
+            <input type="hidden" id="edit-is-auth">
+
+            <button id="btn-approve-user" onclick="approveUser()" class="w-full mt-8 py-3.5 bg-purple-600 text-white font-bold rounded-2xl hover:bg-purple-700 shadow-lg transition-all text-sm hidden mb-2">
+                가입 승인하기
+            </button>
+
+            <button id="btn-save-individual" onclick="saveIndividualEdit()" class="w-full mt-4 py-3.5 bg-black text-white font-bold rounded-2xl hover:bg-gray-800 shadow-lg transition-all text-sm">
                 정보 저장하기
             </button>
             
@@ -339,8 +383,8 @@
         <!-- Header -->
         <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
             <div>
-                <h3 class="text-lg font-bold text-gray-400 uppercase tracking-widest text-xs mb-1">Manage Attendance</h3>
-                <h2 id="modal-date-title" class="text-3xl font-black">2026-01-27</h2>
+                <h3 class="text-lg font-bold text-gray-400 uppercase tracking-widest text-xs mb-1">수기 출석 관리</h3>
+                <h2 id="modal-date-title" class="text-3xl">2026-01-27</h2>
             </div>
             <button onclick="closeAttendanceModal()" class="p-2 hover:bg-gray-200 rounded-full transition"><i data-lucide="x" class="w-6 h-6"></i></button>
         </div>
@@ -348,19 +392,19 @@
         <!-- Status Selector -->
         <div class="p-6 flex space-x-4 justify-center border-b border-gray-100">
             <button onclick="setBatchStatus('present')" id="btn-present" class="flex-1 py-3 rounded-xl font-bold border-2 transition-all flex flex-col items-center justify-center gap-1">
-                <i data-lucide="check-circle" class="w-6 h-6"></i> 출석 (Present)
+                <i data-lucide="check-circle" class="w-6 h-6"></i> 출석
             </button>
             <button onclick="setBatchStatus('late')" id="btn-late" class="flex-1 py-3 rounded-xl font-bold border-2 transition-all flex flex-col items-center justify-center gap-1">
-                <i data-lucide="clock" class="w-6 h-6"></i> 지각 (Late)
+                <i data-lucide="clock" class="w-6 h-6"></i> 지각
             </button>
             <button onclick="setBatchStatus('absent')" id="btn-absent" class="flex-1 py-3 rounded-xl font-bold border-2 transition-all flex flex-col items-center justify-center gap-1">
-                <i data-lucide="trash-2" class="w-6 h-6"></i> 결석/삭제 (Absent)
+                <i data-lucide="trash-2" class="w-6 h-6"></i> 결석/삭제
             </button>
         </div>
         
         <!-- Search & List -->
         <div class="p-4 bg-gray-50 border-b border-gray-100">
-            <input type="text" id="modal-search" oninput="filterModalMembers()" placeholder="Search members by name..." 
+            <input type="text" id="modal-search" oninput="filterModalMembers()" placeholder="이름으로 검색" 
                    class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-black focus:border-black transition">
         </div>
         
@@ -370,9 +414,9 @@
         
         <!-- Footer -->
         <div class="p-6 border-t border-gray-100 flex justify-end space-x-4 bg-gray-50">
-            <button onclick="closeAttendanceModal()" class="px-6 py-3 font-bold text-gray-500 hover:bg-gray-200 rounded-xl transition">Cancel</button>
+            <button onclick="closeAttendanceModal()" class="px-6 py-3 font-bold text-gray-500 hover:bg-gray-200 rounded-xl transition">취소</button>
             <button onclick="applyBatchAttendance()" class="px-8 py-3 bg-black text-white font-bold rounded-xl hover:bg-gray-800 shadow-lg transition flex items-center">
-                Apply Changes <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i>
+                수정 <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i>
             </button>
         </div>
     </div>
@@ -495,6 +539,52 @@
         input.value = formatted;
     }
 
+    function copyWarningNames(btn) {
+        const names = btn.getAttribute('data-names');
+        if (!names) {
+            alert("복사할 이름이 없습니다.");
+            return;
+        }
+        
+        // Try modern API first (Works on localhost/HTTPS)
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(names).then(() => {
+                alert("경고 대상자 명단이 복사되었습니다.");
+            }).catch(err => {
+                console.error('Async: Could not copy text: ', err);
+                fallbackCopyTextToClipboard(names);
+            });
+        } else {
+            // Fallback for HTTP (Legacy)
+            fallbackCopyTextToClipboard(names);
+        }
+    }
+    
+    function fallbackCopyTextToClipboard(text) {
+        var textArea = document.createElement("textarea");
+        textArea.value = text;
+        
+        // Ensure it's not visible but part of the DOM
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "0";
+        document.body.appendChild(textArea);
+        
+        textArea.focus();
+        textArea.select();
+        
+        try {
+            var successful = document.execCommand('copy');
+            if(successful) alert("경고 대상자 명단이 복사되었습니다.");
+            else alert("복사에 실패했습니다.");
+        } catch (err) {
+            console.error('Fallback: Oops, unable to copy', err);
+            alert("복사를 지원하지 않는 브라우저입니다.");
+        }
+        
+        document.body.removeChild(textArea);
+    }
+
     async function updateUserInfo(uid) {
         const nicknameInput = document.getElementById(`nickname-${uid}`);
         const phoneInput = document.getElementById(`phone-${uid}`);
@@ -502,6 +592,7 @@
         const date1Input = document.getElementById(`unnotified-date1-${uid}`);
         const date2Input = document.getElementById(`unnotified-date2-${uid}`);
         const sickInput = document.getElementById(`sick-${uid}`);
+        const authInput = document.getElementById(`is_auth-${uid}`); // Changed ID
         
         const nickname = nicknameInput.value;
         const phone = phoneInput.value;
@@ -509,6 +600,7 @@
         const date1 = date1Input.value;
         const date2 = date2Input.value;
         const isSickLeave = sickInput.checked;
+        const isAuth = authInput ? authInput.value : 'approved'; // Default approved
         
         const formData = new FormData();
         formData.append('uid', uid);
@@ -518,6 +610,7 @@
         formData.append('unnotified_date1', date1);
         formData.append('unnotified_date2', date2);
         formData.append('is_sick_leave', isSickLeave);
+        formData.append('is_auth', isAuth); // Send is_auth
 
         try {
             const response = await fetch('/admin/api/user/update', {
@@ -539,11 +632,11 @@
     }
 
     // --- Mobile Edit Modal Logic ---
-    function openEditModal(uid, nickname, initialNickname, batch, phone, date1, date2, isSick, profileImg) {
+    function openEditModal(uid, nickname, initialNickname, batch, phone, date1, date2, isSick, profileImg, isAuth) {
         document.getElementById('edit-uid').value = uid;
         const nickInput = document.getElementById('edit-nickname-field');
         nickInput.value = nickname;
-        nickInput.placeholder = initialNickname; // Set placeholder to original name
+        nickInput.placeholder = initialNickname;
         
         document.getElementById('edit-initial-nickname').value = initialNickname;
         document.getElementById('edit-batch').value = batch && batch !== 'None' ? batch : '';
@@ -551,6 +644,18 @@
         document.getElementById('edit-unnotified-date1').value = date1 && date1 !== 'None' ? date1 : '';
         document.getElementById('edit-unnotified-date2').value = date2 && date2 !== 'None' ? date2 : '';
         document.getElementById('edit-sick').checked = isSick;
+        document.getElementById('edit-is-auth').value = isAuth || 'approved'; // Changed ID
+        
+        // Show/Hide Approve and Save Buttons
+        const approveBtn = document.getElementById('btn-approve-user');
+        const saveBtn = document.getElementById('btn-save-individual');
+        if (isAuth === 'pending') {
+            approveBtn.classList.remove('hidden');
+            saveBtn.classList.add('hidden'); // Hide Save button for pending users
+        } else {
+            approveBtn.classList.add('hidden');
+            saveBtn.classList.remove('hidden'); // Show Save button for approved users
+        }
         
         // Profile Display (Horizontal)
         const imgUrl = profileImg || `https://ui-avatars.com/api/?name=${nickname}&background=random`;
@@ -559,10 +664,36 @@
             <div class="flex flex-col">
                 <h3 class="text-xl font-black text-gray-800 leading-tight">${nickname}</h3>
                 <p class="text-xs text-gray-400 font-mono">#${uid}</p>
+                <span class="text-[10px] uppercase font-bold ${isAuth === 'pending' ? 'text-purple-600' : 'text-green-600'}">${isAuth || 'APPROVED'}</span>
             </div>
         `;
         
         document.getElementById('edit-user-modal').classList.remove('hidden');
+    }
+
+    async function approveUser() {
+        if(!confirm("이 회원의 가입을 승인하시겠습니까?")) return;
+        
+        const uid = document.getElementById('edit-uid').value;
+        const formData = new FormData();
+        formData.append('uid', uid);
+        formData.append('is_auth', 'approved'); // Approve!
+        
+        // Also send current form data
+        formData.append('nickname', document.getElementById('edit-nickname-field').value);
+        formData.append('phone', document.getElementById('edit-phone').value);
+        formData.append('batch', document.getElementById('edit-batch').value);
+
+        try {
+            const response = await fetch('/admin/api/user/update', { method: 'POST', body: formData });
+            const data = await response.json();
+            if (response.ok) {
+                alert(`✅ 가입이 승인되었습니다!`);
+                window.location.reload(); 
+            } else {
+                alert("❌ 오류: " + data.message);
+            }
+        } catch (error) { console.error(error); alert("Network error."); }
     }
 
     function closeEditModal() {
@@ -609,6 +740,7 @@
         const date1 = document.getElementById('edit-unnotified-date1').value;
         const date2 = document.getElementById('edit-unnotified-date2').value;
         const isSickLeave = document.getElementById('edit-sick').checked;
+        const isAuth = document.getElementById('edit-is-auth').value; // Changed ID
         
         const formData = new FormData();
         formData.append('uid', uid);
@@ -618,6 +750,7 @@
         formData.append('unnotified_date1', date1);
         formData.append('unnotified_date2', date2);
         formData.append('is_sick_leave', isSickLeave);
+        formData.append('is_auth', isAuth); // Send is_auth
 
         try {
             const response = await fetch('/admin/api/user/update', {
@@ -714,7 +847,7 @@
             renderModalList(statusMap);
         } catch (e) {
             console.error(e);
-            listContainer.innerHTML = '<p class="text-red-500 text-center p-4">Error loading data.</p>';
+            listContainer.innerHTML = '<p class="text-red-500 text-center p-4">데이터를 불러오는 중 오류가 발생했습니다.</p>';
         }
     }
     
@@ -787,11 +920,11 @@
         const userIds = Array.from(checkedBoxes).map(cb => cb.value);
         
         if (userIds.length === 0) {
-            alert("Please select at least one member.");
+            alert("최소 한 명 이상의 멤버를 선택해주세요.");
             return;
         }
         
-        if (!confirm(`Apply '${selectedBatchStatus.toUpperCase()}' to ${userIds.length} members for ${selectedDate}?`)) return;
+        if (!confirm(`[${selectedDate}] ${userIds.length}명의 멤버를 '${selectedBatchStatus.toUpperCase()}' 상태로 변경하시겠습니까?`)) return;
         
         try {
             const res = await fetch('/admin/api/attendance/batch', {
@@ -805,7 +938,7 @@
             });
             const data = await res.json();
             if (res.ok) {
-                alert("Updated successfully!");
+                alert("성공적으로 업데이트되었습니다!");
                 openAttendanceModal(selectedDate);
             } else {
                 alert("Error: " + data.message);

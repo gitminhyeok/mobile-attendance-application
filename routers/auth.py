@@ -94,7 +94,8 @@ def allback(code: str, request: Request, response: Response):
                 "initial_nickname": nickname, # Permanent record of original name
                 "profile_image": profile_image,
                 "created_at": firestore.SERVER_TIMESTAMP,
-                "last_login": firestore.SERVER_TIMESTAMP
+                "last_login": firestore.SERVER_TIMESTAMP,
+                "is_auth": "pending" # Default status for new users
             }
             user_ref.set(user_data)
         else:

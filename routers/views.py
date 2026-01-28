@@ -228,91 +228,109 @@ async def read_root(request: Request): # Removed query params from root
         "current_streak": 0,
         "total_points": 0,
         "attendance_rate": 0,
-        "calendar": [] 
+        "calendar": [],
+        "streak_date": ""
     }
     
+    is_pending = False # New flag
+    
     if uid and db:
-        # Get Nickname
+        # Get User Doc & Check Status
         user_doc = db.collection("users").document(uid).get()
         if user_doc.exists:
-            nickname = user_doc.to_dict().get("nickname")
+            u_data = user_doc.to_dict()
+            nickname = u_data.get("nickname")
+            # Check is_auth first, then fallback to status, then default to approved
+            is_auth = u_data.get("is_auth") or u_data.get("status", "approved")
             
-        # Get Calendar Data for current month
-        my_record["calendar"] = get_calendar_data(db, uid, now)
+            # Additional Status Fields
+            unnotified_date1 = u_data.get("unnotified_date1", "")
+            unnotified_date2 = u_data.get("unnotified_date2", "")
+            is_sick_leave = u_data.get("is_sick_leave", False)
+            
+            unnotified_count = 0
+            if unnotified_date1: unnotified_count += 1
+            if unnotified_date2: unnotified_count += 1
+            
+            if is_auth == "pending":
+                is_pending = True
+            
+        # Only fetch data if NOT pending
+        if not is_pending:
+            # Get Calendar Data for current month
+            my_record["calendar"] = get_calendar_data(db, uid, now)
 
-        # Get Total Stats (Separate query for total count)
-        # Optimization: In real app, store totals on user doc. Here we count.
-        
-        # Calculate totals and streak from ALL history
-        docs = db.collection("attendance").where(filter=FieldFilter("user_id", "==", uid)).order_by("date", direction="ASCENDING").stream()
-        
-        all_dates = []
-        for doc in docs:
-            data = doc.to_dict()
-            date_str = data['date']
-            all_dates.append(date_str)
+            # Get Total Stats (Separate query for total count)
+            # Optimization: In real app, store totals on user doc. Here we count.
             
-            if date_str == today_str:
-                already_attended = True
+            # Calculate totals from ALL history stream
+            docs = db.collection("attendance").where(filter=FieldFilter("user_id", "==", uid)).order_by("date", direction="ASCENDING").stream()
             
-            my_record["total_attendance"] += 1
-            my_record["total_points"] += data.get("point", 0)
-            
-            if date_str.startswith(current_month_prefix):
-                my_record["current_month_count"] += 1
-        
-        # Calculate Longest Weekly Streak
-        max_streak = 0
-        current_streak = 0
-        streak_end_date = ""
-        
-        if all_dates:
-            # Get unique ISO weeks: set of (year, week)
-            attended_weeks = sorted(list(set([datetime.strptime(d, "%Y-%m-%d").isocalendar()[:2] for d in all_dates])))
-            
-            if attended_weeks:
-                current_streak = 1
-                max_streak = 1
-                streak_end_date = all_dates[0] # Initial
+            all_dates = []
+            for doc in docs:
+                data = doc.to_dict()
+                date_str = data['date']
+                all_dates.append(date_str)
                 
-                for i in range(1, len(attended_weeks)):
-                    prev_w = attended_weeks[i-1]
-                    curr_w = attended_weeks[i]
+                if date_str == today_str:
+                    already_attended = True
+                
+                my_record["total_attendance"] += 1
+                my_record["total_points"] += data.get("point", 0)
+                
+                if date_str.startswith(current_month_prefix):
+                    my_record["current_month_count"] += 1
+            
+            # Calculate Longest Weekly Streak
+            max_streak = 0
+            current_streak = 0
+            streak_end_date = ""
+            
+            if all_dates:
+                # Get unique ISO weeks: set of (year, week)
+                attended_weeks = sorted(list(set([datetime.strptime(d, "%Y-%m-%d").isocalendar()[:2] for d in all_dates])))
+                
+                if attended_weeks:
+                    current_streak = 1
+                    max_streak = 1
+                    streak_end_date = all_dates[0] # Initial
                     
-                    # Check if consecutive week
-                    # (Handles year change: e.g., 2025-W52 to 2026-W01)
-                    d1 = datetime.fromisocalendar(prev_w[0], prev_w[1], 1)
-                    d2 = datetime.fromisocalendar(curr_w[0], curr_w[1], 1)
-                    
-                    if (d2 - d1).days == 7:
-                        current_streak += 1
-                    else:
-                        current_streak = 1
-                    
-                    if current_streak >= max_streak:
-                        max_streak = current_streak
-                        # Find the last date in all_dates that belongs to this week
-                        week_dates = [d for d in all_dates if datetime.strptime(d, "%Y-%m-%d").isocalendar()[:2] == curr_w]
-                        if week_dates:
-                            streak_end_date = week_dates[-1]
+                    for i in range(1, len(attended_weeks)):
+                        prev_w = attended_weeks[i-1]
+                        curr_w = attended_weeks[i]
+                        
+                        # Check if consecutive week
+                        d1 = datetime.fromisocalendar(prev_w[0], prev_w[1], 1)
+                        d2 = datetime.fromisocalendar(curr_w[0], curr_w[1], 1)
+                        
+                        if (d2 - d1).days == 7:
+                            current_streak += 1
+                        else:
+                            current_streak = 1
+                        
+                        if current_streak >= max_streak:
+                            max_streak = current_streak
+                            week_dates = [d for d in all_dates if datetime.strptime(d, "%Y-%m-%d").isocalendar()[:2] == curr_w]
+                            if week_dates:
+                                streak_end_date = week_dates[-1]
 
-        my_record["attendance_rate"] = int((my_record["current_month_count"] / valid_days_count) * 100)
-        my_record["current_streak"] = max_streak
-        # Format date to YY.MM.DD
-        if streak_end_date:
-            try:
-                dt_obj = datetime.strptime(streak_end_date, "%Y-%m-%d")
-                my_record["streak_date"] = dt_obj.strftime("%y.%m.%d")
-            except:
-                my_record["streak_date"] = streak_end_date
-        else:
-            my_record["streak_date"] = ""
+            my_record["attendance_rate"] = int((my_record["current_month_count"] / valid_days_count) * 100)
+            my_record["current_streak"] = max_streak
+            # Format date to YY.MM.DD
+            if streak_end_date:
+                try:
+                    dt_obj = datetime.strptime(streak_end_date, "%Y-%m-%d")
+                    my_record["streak_date"] = dt_obj.strftime("%y.%m.%d")
+                except:
+                    my_record["streak_date"] = streak_end_date
+            else:
+                my_record["streak_date"] = ""
 
     # 4. Determine Status Message
     status_message = "첫 출석을 기다리고 있어요 🌱"
     status_color = "text-gray-500"
     
-    if uid and db:
+    if uid and db and not is_pending:
         # Get last attendance for message logic
         last_attend_doc = (
             db.collection("attendance")
@@ -322,34 +340,46 @@ async def read_root(request: Request): # Removed query params from root
             .stream()
         )
         last_attend_list = list(last_attend_doc)
+        days_absent = 999
         
         if last_attend_list:
             last_data = last_attend_list[0].to_dict()
             last_date_str = last_data['date']
             last_date = datetime.strptime(last_date_str, "%Y-%m-%d").date()
             days_absent = (now.date() - last_date).days
-            
-            if days_absent >= 14:
-                status_message = "2주간 참여하지 못했어요 😢"
-                status_color = "text-magnus-red"
-            elif days_absent < 7:
-                if my_record["current_month_count"] > 1:
-                    status_message = "훌륭해요, 연속으로 참석 중이예요 🔥"
-                    status_color = "text-blue-600"
-                else:
-                    status_message = "이번 주에도 훈련에 참여했어요 👍"
-                    status_color = "text-black"
+        
+        # Status Priority Logic
+        if is_sick_leave:
+            status_message = "병결 상태시군요, 빠른 회복을 바라요 💊"
+            status_color = "text-blue-600"
+        elif days_absent >= 21 or unnotified_count >= 2:
+            reason = "미통보 불참 누적" if unnotified_count >= 2 else "장기 결석"
+            status_message = f"제적 대상입니다 🚨 ({reason})"
+            status_color = "text-red-600"
+        elif days_absent >= 14:
+            status_message = "벌써 2주 연속으로 참여하지 않았어요 ⚠️"
+            status_color = "text-yellow-600"
+        elif days_absent < 7 and last_attend_list:
+            if my_record["current_month_count"] > 1:
+                status_message = "훌륭해요, 연속으로 참석 중이예요 🔥"
+                status_color = "text-blue-600"
             else:
-                status_message = "어서오세요! 오늘도 파이팅 💪"
-                status_color = "text-gray-500"
+                status_message = "이번 주에도 훈련에 참여했어요 👍"
+                status_color = "text-black"
+        elif last_attend_list:
+            status_message = "어서오세요! 오늘도 힘내세요 💪"
+            status_color = "text-gray-500"
 
     # 5. Ranking Data (Initial Load using helper)
-    ranking_list = get_ranking_data(db, target_date, valid_days_count, uid)
+    ranking_list = []
+    if not is_pending:
+        ranking_list = get_ranking_data(db, target_date, valid_days_count, uid)
 
     context = {
         "request": request,
         "uid": uid,
         "nickname": nickname,
+        "is_pending": is_pending, # Added
         "is_ip_valid": is_ip_valid,
         "time_status": time_status,
         "time_msg": time_msg,
