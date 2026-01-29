@@ -260,7 +260,7 @@ async def admin_dashboard(request: Request):
         )
         
         last_date_str = "Never"
-        days_absent = 999
+        days_absent = -1 # New user / No attendance record
         
         last_attend_list = list(last_attend_doc)
         if last_attend_list:

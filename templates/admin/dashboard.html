@@ -932,7 +932,7 @@
             });
             const data = await res.json();
             if (res.ok) {
-                alert("성공적으로 업데이트되었습니다!");
+                // Success - Silent refresh
                 openAttendanceModal(selectedDate);
             } else {
                 alert("Error: " + data.message);
