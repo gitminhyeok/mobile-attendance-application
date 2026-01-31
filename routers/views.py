@@ -242,6 +242,7 @@ async def read_root(request: Request): # Removed query params from root
     time_status, time_msg = check_attendance_time()
     is_ip_valid = check_ip(client_ip)
     already_attended = False
+    today_status = None # To store 'present' or 'late'
     
     db = get_db()
     
@@ -316,6 +317,7 @@ async def read_root(request: Request): # Removed query params from root
                 
                 if date_str == today_str:
                     already_attended = True
+                    today_status = data.get("status") # Capture status (present/late)
                 
                 my_record["total_attendance"] += 1
                 my_record["total_points"] += data.get("point", 0)

@@ -65,6 +65,15 @@
         .hover-underline:hover::after {
             width: 100%;
         }
+
+        /* Custom Animations */
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-bounce-slow {
+            animation: bounce-slow 3s ease-in-out infinite;
+        }
     </style>
 </head>
 <body class="antialiased text-black flex flex-col min-h-screen">

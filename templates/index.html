@@ -19,36 +19,50 @@
                 {% if is_pending %}
                     <div class="bg-gray-100 border border-gray-200 py-6 px-10 rounded-2xl flex flex-col items-center gap-3">
                         <i data-lucide="clock" class="w-8 h-8 text-gray-400"></i>
-                        <span class="text-sm font-bold tracking-widest text-gray-500 uppercase">가입 신청 완료</span>
+                        <span class="text-smtracking-widest text-gray-500 uppercase">가입 신청 완료</span>
                         <p class="text-xs text-gray-400">관리자의 가입 승인을 기다리고 있습니다.</p>
                     </div>
                 {% elif already_attended %}
-                    <div class="flex flex-col items-center space-y-4">
-                        <div class="w-16 h-16 rounded-full border-2 border-black flex items-center justify-center">
-                            <i data-lucide="check" class="w-8 h-8"></i>
-                        </div>
-                        <p class="font-bold text-2xl tracking-widest uppercase">출석 완료</p>
+                    <div class="flex flex-col items-center space-y-4 animate-[fadeIn_1s_ease-out]">
+                        {% if today_status == 'late' %}
+                            <div class="w-20 h-20 rounded-full border-4 border-amber-500 flex items-center justify-center bg-amber-50 shadow-[0_0_20px_rgba(245,158,11,0.2)]">
+                                <i data-lucide="clock" class="w-10 h-10 text-amber-500"></i>
+                            </div>
+                            <p class="text-2xl tracking-widest uppercase text-amber-600">지각</p>
+                        {% else %}
+                            <div class="w-20 h-20 rounded-full border-4 border-blue-500 flex items-center justify-center bg-blue-50 shadow-[0_0_20px_rgba(59,130,246,0.2)]">
+                                <i data-lucide="check" class="w-10 h-10 text-blue-500"></i>
+                            </div>
+                            <p class="text-l tracking-widest uppercase text-blue-600">출석 완료</p>
+                        {% endif %}
                     </div>
                 {% elif time_status == 'closed' %}
                     <div class="border-t border-b border-black py-4 px-10">
-                        <span class="text-sm font-bold tracking-widest text-gray-400">{{ time_msg }}</span>
+                        <span class="text-smtracking-widest text-gray-400">{{ time_msg }}</span>
                     </div>
                 {% elif not is_ip_valid %}
                     <div class="bg-black text-white py-5 px-12 rounded-full cursor-not-allowed opacity-50 shadow-lg">
-                        <span class="text-xs font-bold tracking-[0.15em] flex items-center gap-2">
-                            <i data-lucide="wifi-off" class="w-4 h-4"></i> 와이파이 연결 필요
+                        <span class="text-xstracking-[0.15em] flex items-center gap-2">
+                            <i data-lucide="wifi-off" class="w-4 h-4"></i> 와이파이에 연결하세요
                         </span>
                     </div>
                 {% else %}
-                    <button onclick="doAttendance()" id="attend-btn" class="group relative px-16 py-5 bg-black text-white rounded-full overflow-hidden transition-all hover:shadow-xl hover:scale-105 active:scale-95">
-                        <span class="relative z-10 text-sm font-bold tracking-[0.2em] flex items-center gap-3">
-                            출석하기
-                            <i data-lucide="arrow-right" class="w-4 h-4 transition-transform group-hover:translate-x-1"></i>
-                        </span>
-                    </button>
+                    <div class="flex flex-col items-center gap-6">
+                        <div class="relative">
+                            <!-- Animated Ring specifically centered on button -->
+                            <div class="absolute inset-0 bg-black rounded-full animate-ping opacity-20"></div>
+                            
+                            <button onclick="doAttendance()" id="attend-btn" 
+                                    class="relative w-24 h-24 bg-gradient-to-br from-gray-800 to-black rounded-full flex items-center justify-center shadow-[0_15px_35px_rgba(0,0,0,0.3)] transition-all duration-300 hover:scale-110 active:scale-95 group animate-bounce-slow">
+                                <i data-lucide="fingerprint" class="w-10 h-10 text-white pointer-events-none group-hover:scale-110 transition-transform"></i>
+                            </button>
+                        </div>
+                        
+                        <p class="text-l tracking-widest text-black animate-pulse">출석</p>
+                    </div>
                 {% endif %}
             {% else %}
-                <a href="/login/kakao" class="border-2 border-black py-5 px-12 rounded-full text-sm font-bold tracking-[0.15em] hover:bg-black hover:text-white transition-all hover:shadow-xl active:scale-95 flex items-center gap-3">
+                <a href="/login/kakao" class="border-2 border-black py-5 px-12 rounded-full text-smtracking-[0.15em] hover:bg-black hover:text-white transition-all hover:shadow-xl active:scale-95 flex items-center gap-3">
                     <i data-lucide="message-circle" class="w-4 h-4 fill-current"></i>
                     KAKAO LOGIN
                 </a>
@@ -78,7 +92,7 @@
                                 <div class="flex flex-col gap-10">
                                     <!-- Prominent Status Message -->
                                     <div class="inline-block border-l-4 border-black pl-6 py-2">
-                                        <p class="text-xl md:text-2xl font-bold tracking-tight {{ status_color }}">{{ status_message }}</p>
+                                        <p class="text-xl md:text-2xltracking-tight {{ status_color }}">{{ status_message }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -147,20 +161,20 @@
 
                 <div class="mb-4">
                     <div class="grid grid-cols-7 gap-1 mb-2 text-center">
-                        <span class="text-[10px] text-gray-400 font-bold uppercase">Mon</span>
-                        <span class="text-[10px] text-gray-400 font-bold uppercase">Tue</span>
-                        <span class="text-[10px] text-gray-400 font-bold uppercase">Wed</span>
-                        <span class="text-[10px] text-gray-400 font-bold uppercase">Thu</span>
-                        <span class="text-[10px] text-gray-400 font-bold uppercase">Fri</span>
-                        <span class="text-[10px] text-magnus-red font-bold uppercase">Sat</span>
-                        <span class="text-[10px] text-magnus-red font-bold uppercase">Sun</span>
+                        <span class="text-[10px] text-gray-400uppercase">Mon</span>
+                        <span class="text-[10px] text-gray-400uppercase">Tue</span>
+                        <span class="text-[10px] text-gray-400uppercase">Wed</span>
+                        <span class="text-[10px] text-gray-400uppercase">Thu</span>
+                        <span class="text-[10px] text-gray-400uppercase">Fri</span>
+                        <span class="text-[10px] text-magnus-reduppercase">Sat</span>
+                        <span class="text-[10px] text-magnus-reduppercase">Sun</span>
                     </div>
                     <div id="calendar-grid" class="grid grid-cols-7 gap-2">
                         {% for day in my_record.calendar %}
                             {% if day.status == 'empty' %}
                                 <div class="aspect-square"></div>
                             {% else %}
-                                <div class="aspect-square rounded-md flex items-center justify-center text-xs font-bold transition-transform hover:scale-110 
+                                <div class="aspect-square rounded-md flex items-center justify-center text-xstransition-transform hover:scale-110 
                                     {% if day.is_today %} border-2 border-blue-500 {% endif %}
                                     {% if day.status == 'present' %} bg-black text-white
                                     {% elif day.status == 'late' %} bg-magnus-red text-white
@@ -174,7 +188,7 @@
                     </div>
                 </div>
                 
-                <div class="flex items-center justify-end space-x-4 text-[10px] uppercase font-bold text-gray-400 mt-6">
+                <div class="flex items-center justify-end space-x-4 text-[10px] uppercasetext-gray-400 mt-6">
                     <div class="flex items-center"><div class="w-3 h-3 bg-black rounded mr-1"></div> Present</div>
                     <div class="flex items-center"><div class="w-3 h-3 bg-magnus-red rounded mr-1"></div> Late</div>
                     <div class="flex items-center"><div class="w-3 h-3 bg-gray-200 rounded mr-1"></div> Absent</div>
@@ -218,7 +232,7 @@
                     {% if ranking_list %}
                         {% for item in ranking_list %}
                         <tr class="group hover:bg-gray-50 transition-colors {{ 'bg-gray-50' if item.is_me else '' }} animate-[fadeIn_0.3s_ease-out]">
-                            <td class="py-5 text-xl font-bold text-black text-center">
+                            <td class="py-5 text-xltext-black text-center">
                                 {{ item.rank }}
                             </td>
                             <td class="py-5 pl-4">
@@ -358,8 +372,42 @@
 </style>
 
 <script>
-    let recordYear = {{ initial_year }};
-    let recordMonth = {{ initial_month }};
+    // Moved to top for reliability
+    async function doAttendance() {
+        console.log("Attendance function called");
+        const btn = document.getElementById('attend-btn');
+        if(btn) {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+        }
+        
+        try {
+            const response = await fetch('/attendance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await response.json();
+            
+            if (response.ok) {
+                alert("출석이 완료되었습니다: " + data.message);
+                window.location.reload();
+            } else {
+                alert(data.message);
+                if(btn) {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert("네트워크 오류가 발생했습니다.");
+            if(btn) {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
+        }
+    }
+
     let currentYear = {{ initial_year }};
     let currentMonth = {{ initial_month }};
 
@@ -426,14 +474,15 @@
                     html = `<div class="aspect-square"></div>`;
                 } else {
                     html = `
-                        <div class="aspect-square rounded-md flex items-center justify-center text-xs font-bold transition-transform hover:scale-110 ${cellClass} ${borderClass}">
+                        <div class="aspect-square rounded-md flex items-center justify-center text-xstransition-transform hover:scale-110 ${cellClass} ${borderClass}">
                             ${day.day}
                         </div>
                     `;
                 }
                 grid.innerHTML += html;
             });
-            const nextBtn = document.getElementById('record-next-btn');
+            // Update Next Button Visibility
+            // nextBtn is already defined at the start of this function
             if (data.is_current_month) nextBtn.classList.add('invisible');
             else nextBtn.classList.remove('invisible');
             lucide.createIcons();
@@ -475,7 +524,7 @@
                     let profileImg = item.profile_image ? item.profile_image : `https://ui-avatars.com/api/?name=${item.nickname}&background=random`;
                     const row = `
                         <tr class="group hover:bg-gray-50 transition-colors ${item.is_me ? 'bg-gray-50' : ''} animate-[fadeIn_0.3s_ease-out]">
-                            <td class="py-5 text-xl font-bold text-black text-center">${item.rank}</td>
+                            <td class="py-5 text-xltext-black text-center">${item.rank}</td>
                             <td class="py-5 pl-4">
                                 <div class="flex items-center">
                                     <img src="${profileImg}" alt="${item.nickname}" class="w-10 h-10 rounded-full object-cover mr-3 border border-gray-200 shadow-sm bg-gray-100">
@@ -501,18 +550,6 @@
             else nextBtn.classList.remove('invisible');
             lucide.createIcons();
         } catch (error) { console.error(error); alert("랭킹 데이터를 불러오지 못했습니다."); }
-    }
-
-    async function doAttendance() {
-        const btn = document.getElementById('attend-btn');
-        btn.disabled = true;
-        btn.style.opacity = '0.5';
-        try {
-            const response = await fetch('/attendance', { method: 'POST' });
-            const data = await response.json();
-            if (response.ok) { alert("출석이 완료되었습니다: " + data.message); window.location.reload(); }
-            else { alert(data.message); btn.disabled = false; btn.style.opacity = '1'; }
-        } catch (error) { console.error('Error:', error); alert("네트워크 오류가 발생했습니다."); btn.disabled = false; btn.style.opacity = '1'; }
     }
 </script>
 {% endblock %}
