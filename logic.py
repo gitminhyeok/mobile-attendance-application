@@ -58,7 +58,7 @@ def check_attendance_time():
         # 지각: 13:15:01 ~ 15:00 (기준 시간 2시간까지)
         start_attend = time(12, 45)
         end_attend = time(13, 15)
-        end_late = time(15, 0)
+        end_late = time(18, 0)
         
         if start_attend <= current_time <= end_attend:
             return "open", "출석 가능"

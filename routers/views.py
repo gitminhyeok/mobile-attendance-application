@@ -431,6 +431,7 @@ async def read_root(request: Request): # Removed query params from root
         "time_status": time_status,
         "time_msg": time_msg,
         "already_attended": already_attended,
+        "today_status": today_status, # Pass today's status (present/late)
         "client_ip": client_ip,
         "my_record": my_record,
         "ranking_list": ranking_list,
