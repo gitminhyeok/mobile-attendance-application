@@ -34,20 +34,23 @@
                         <span class="text-sm font-bold tracking-widest text-gray-400">{{ time_msg }}</span>
                     </div>
                 {% elif not is_ip_valid %}
-                    <div class="bg-black text-white py-4 px-12 rounded-full cursor-not-allowed opacity-50">
-                        <span class="text-xs tracking-widest flex items-center gap-2">와이파이에 연결해주세요.</span>
+                    <div class="bg-black text-white py-5 px-12 rounded-full cursor-not-allowed opacity-50 shadow-lg">
+                        <span class="text-xs font-bold tracking-[0.15em] flex items-center gap-2">
+                            <i data-lucide="wifi-off" class="w-4 h-4"></i> 와이파이 연결 필요
+                        </span>
                     </div>
                 {% else %}
-                    <button onclick="doAttendance()" id="attend-btn" class="group relative px-16 py-6 bg-black text-white overflow-hidden transition-all hover:pr-20">
-                        <span class="relative z-10 text-sm tracking-[0.2em]">출석하기</span>
-                        <div class="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 transition-all group-hover:opacity-100 group-hover:right-8">
-                            <i data-lucide="arrow-right" class="w-5 h-5"></i>
-                        </div>
+                    <button onclick="doAttendance()" id="attend-btn" class="group relative px-16 py-5 bg-black text-white rounded-full overflow-hidden transition-all hover:shadow-xl hover:scale-105 active:scale-95">
+                        <span class="relative z-10 text-sm font-bold tracking-[0.2em] flex items-center gap-3">
+                            출석하기
+                            <i data-lucide="arrow-right" class="w-4 h-4 transition-transform group-hover:translate-x-1"></i>
+                        </span>
                     </button>
                 {% endif %}
             {% else %}
-                <a href="/login/kakao" class="border-2 border-black py-5 px-12 text-sm tracking-widest hover:bg-black hover:text-white transition-all">
-                    LOGIN WITH KAKAO
+                <a href="/login/kakao" class="border-2 border-black py-5 px-12 rounded-full text-sm font-bold tracking-[0.15em] hover:bg-black hover:text-white transition-all hover:shadow-xl active:scale-95 flex items-center gap-3">
+                    <i data-lucide="message-circle" class="w-4 h-4 fill-current"></i>
+                    KAKAO LOGIN
                 </a>
             {% endif %}
         </div>
