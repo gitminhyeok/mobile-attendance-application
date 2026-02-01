@@ -181,6 +181,7 @@ async def get_record_calendar_api(request: Request, year: int, month: int):
     valid_days_count = 0
     last_day = calendar.monthrange(year, month)[1]
     now = get_current_kst_time()
+    now_naive = now.replace(tzinfo=None) # Fix for timezone comparison error
     
     # Logic to count valid days (Sat/Sun) up to today if current month, or all month if past
     check_range = range(1, last_day + 1)
@@ -192,7 +193,7 @@ async def get_record_calendar_api(request: Request, year: int, month: int):
     if target_date.strftime("%Y-%m") == now.strftime("%Y-%m"):
         # Current month: count up to today
         check_range = range(1, now.day + 1)
-    elif target_date > now:
+    elif target_date > now_naive:
         check_range = [] # Future
     else:
         # Past month: full month
@@ -212,7 +213,7 @@ async def get_record_calendar_api(request: Request, year: int, month: int):
     # Count present from the grid data (since get_calendar_data already fetches it)
     current_month_count = 0
     for day in calendar_grid:
-        if day.get('status') == 'present':
+        if day.get('status') in ['present', 'late']: # Count both present and late
             current_month_count += 1
             
     attendance_rate = int((current_month_count / valid_days_count) * 100)
@@ -276,6 +277,9 @@ async def read_root(request: Request): # Removed query params from root
     }
     
     is_pending = False # New flag
+    status_message = ""
+    status_color = "text-gray-500"
+    days_absent = -1
     
     if uid and db:
         # Get User Doc & Check Status

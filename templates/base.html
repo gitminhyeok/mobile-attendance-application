@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}TEAM MAGNUS{% endblock %}</title>
+    <link rel="icon" type="image/jpeg" href="/static/team-magnus-logo.jpg">
     
     <!-- Pretendard Font -->
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
@@ -90,16 +91,16 @@
                 
                 <!-- Navigation Menu (Visible on Mobile with smaller scale) -->
                 <nav class="flex items-center space-x-4 md:space-x-12 ml-4">
-                    <a href="/" class="text-[10px] md:text-sm font-semibold hover-underline tracking-tight">HOME</a>
+                    <a href="/" class="text-[10px] md:text-sm hover-underline tracking-tight">HOME</a>
                     {% if uid and not is_pending and not is_admin_page %}
-                        <a href="#record" class="text-[10px] md:text-sm font-semibold hover-underline tracking-tight">RECORD</a>
-                        <a href="#ranking" class="text-[10px] md:text-sm font-semibold hover-underline tracking-tight">RANKING</a>
+                        <a href="#record" class="text-[10px] md:text-sm hover-underline tracking-tight">RECORD</a>
+                        <a href="#ranking" class="text-[10px] md:text-sm hover-underline tracking-tight">RANKING</a>
                     {% endif %}
                     
                     {% if uid %}
-                        <a href="/logout" class="text-[9px] md:text-xs font-bold border-b border-black md:border-b-2 pb-0.5 hover:text-magnus-red hover:border-magnus-red transition-colors shrink-0">LOGOUT</a>
+                        <a href="/logout" class="text-[9px] md:text-xs border-b border-black md:border-b-2 pb-0.5 hover:text-magnus-red hover:border-magnus-red transition-colors shrink-0">LOGOUT</a>
                     {% else %}
-                        <a href="/login/kakao" class="text-[10px] md:text-sm font-extrabold tracking-tight hover:text-magnus-red transition-colors shrink-0">LOGIN</a>
+                        <a href="/login/kakao" class="text-[10px] md:text-sm tracking-tight hover:text-magnus-red transition-colors shrink-0">LOGIN</a>
                     {% endif %}
                 </nav>
             </div>
@@ -107,20 +108,20 @@
     </header>
 
     <main class="flex-grow pt-20">
-        {% block content %}
-        {% endblock %}
+        {% block content %}{% endblock %}
     </main>
 
-    <!-- Simple Footer -->
-    <footer class="bg-magnus-gray py-12 border-t border-gray-200 mt-auto">
-        <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-start md:items-center">
-            <div>
-                <span class="font-bold text-2xl tracking-tighter">MAGNUS</span>
-                <p class="mt-2 text-xs text-gray-500 max-w-xs">Currently in Beta</p>
+    <!-- Minimalist Footer -->
+    <footer class="py-12 px-6 border-t border-gray-100 bg-white">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <img src="/static/team-magnus-logo.jpg" alt="MAGNUS" class="w-6 h-6 rounded-full grayscale opacity-50">
+                <p class="text-[10px] tracking-[0.2em] text-gray-400 uppercase">TEAM MAGNUS</p>
             </div>
-            <div class="mt-8 md:mt-0 text-[10px] text-gray-400 font-medium">
-                © 2026 TEAM MAGNUS.
-            </div>
+            
+            <p class="text-[10px] tracking-widest text-gray-400 uppercase">
+                © 2026. Developed by 김민혁
+            </p>
         </div>
     </footer>
 

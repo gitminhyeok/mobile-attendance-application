@@ -3,30 +3,29 @@
 Magnus 팀을 위한 위치 및 시간 기반 모바일 출석 체크 어플리케이션입니다.  
 FastAPI와 Firebase를 기반으로 구축되었으며, 특정 WiFi(IP)와 훈련 시간(주말)에만 출석이 가능하도록 설계되었습니다.
 
-## ✨ 주요 기능 (Features)
+## 🌟 Key Features
+- **Smart Attendance**: One-click attendance check based on WiFi IP and Time validation.
+- **Dynamic UI**: 
+    - Interactive 'Fingerprint' attendance button with pulse animations.
+    - Smoothly animated attendance rate charts.
+    - Visual feedback for 'Present' (Blue) vs 'Late' (Amber) status.
+- **Stats & Ranking**: Monthly attendance rates (including late arrivals), streak tracking, and member rankings.
+- **Admin Dashboard**: Manage approvals, edit user info, and monitor long-term absences.
+- **Kakao Integration**: Easy login via Kakao OAuth.
 
-- **📍 위치 기반 출석 체크**: 체육관의 특정 WiFi(공인 IP)에 접속해 있어야만 출석 버튼이 활성화됩니다.
-- **⏰ 시간 제한 로직**: 정해진 훈련 시간(토요일 13시, 일요일 16시) 전후 20분 내에만 출석이 가능하며, 이후 20분간은 지각 처리됩니다.
-- **🔐 승인제 로그인**: 카카오 계정으로 가입 후 관리자의 승인을 받아야 정식 활동이 가능합니다. (보안 강화)
-- **🏆 랭킹 및 기록**: 
-  - 자신의 월별 출석 현황을 확인하고 팀원들과 출석 랭킹을 경쟁할 수 있습니다.
-  - 화살표 네비게이션을 통해 과거/미래의 기록을 손쉽게 조회할 수 있습니다.
-- **🛡️ 관리자 대시보드 (v1.0)**: 
-  - **가입 승인**: 신규 가입자 확인 및 승인 처리.
-  - **멤버 관리**: 이름, 기수, 전화번호, 병결, 미통보 불참 등 상세 정보 수정 및 삭제.
-  - **수기 출석**: 관리자가 직접 날짜별 출석/지각 현황을 일괄 수정 가능.
-  - **모니터링**: 장기 결석자(경고) 및 퇴출 대상자 자동 분류.
-  - **모바일 최적화**: 스마트폰에서도 손쉽게 관리할 수 있는 반응형 UI(카드 뷰, 모달) 제공.
+## 🛠 Tech Stack
+- **Frontend**: HTML5, Tailwind CSS (Play CDN), Jinja2 Templates, Lucide Icons
+- **Backend**: Python FastAPI
+- **Database**: Google Firebase Firestore
+- **Deployment**: AWS EC2 (Recommended)
 
-## 🛠️ 기술 스택 (Tech Stack)
+## 🎨 UI Updates (v1.1)
+- **Attendance Button**: Redesigned as a large, interactive circular button with a fingerprint icon and breathing animation.
+- **Status Indicators**: Distinct visual styles for on-time (Blue Check) and late (Amber Check) attendance.
+- **Chart Animations**: Donut charts now animate smoothly from 0% to the target value on load.
+- **Footer**: Added a minimalist developer credit footer.
 
-- **Backend**: Python (FastAPI), Uvicorn
-- **Database**: Google Firestore (NoSQL)
-- **Frontend**: HTML5, Jinja2 Templates, Tailwind CSS (Mobile First)
-- **Auth**: Kakao OAuth 2.0
-- **Deployment**: Local / Cloud capable
-
-## 🚀 시작하기 (Getting Started)
+## 🚀 Installation
 
 ### 1. 사전 요구사항 (Prerequisites)
 - Python 3.10 이상

@@ -5,4 +5,5 @@ python-multipart
 requests
 firebase-admin
 python-dotenv
-pytzpython-multipart
+pytz
+python-multipart

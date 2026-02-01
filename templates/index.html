@@ -106,7 +106,7 @@
                                                             <div id="rate-chart" class="relative w-32 h-32 md:w-40 md:h-40 rounded-full flex items-center justify-center shrink-0"
                                                                 style="background: conic-gradient(black {{ my_record.attendance_rate }}%, #f3f4f6 0);">
                                                                 <div class="w-28 h-28 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center shadow-inner">
-                                                                    <span id="rate-percent" class="text-3xl md:text-4xl font-bold">{{ my_record.attendance_rate }}%</span>
+                                                                    <span id="rate-percent" class="text-3xl md:text-4xl">{{ my_record.attendance_rate }}%</span>
                                                                 </div>
                                                             </div>
                                                                                                                         <div class="flex flex-col">
@@ -140,7 +140,7 @@
                                                 <div class="flex items-baseline gap-4">
                                                     <p class="text-6xl">{{ my_record.current_streak }} <span class="text-2xl text-gray-600">주</span></p>
                                                     {% if my_record.streak_date %}
-                                                    <span class="text-sm font-mono text-gray-600 tracking-tighter">~ {{ my_record.streak_date }}</span>
+                                                    <span class="text-sm text-gray-600 tracking-tighter">~ {{ my_record.streak_date }}</span>
                                                     {% endif %}
                                                 </div>
                                                 <p class="text-lg text-gray-500 mt-4">연속으로 훈련에 나왔어요</p>
@@ -276,10 +276,10 @@
             <h2 class="text-3xl md:text-4xl mb-8 leading-tight">마그누스는</h2>
             <p class="ftext-gray-350 leading-relaxed max-w-md mb-8">
                 대학생 연합 주짓수 동아리로, <br/>
-                2022년부터 함께 운동하고 있습니다. <br/>
+                2022년부터 함께 운동하고 있습니다. <br/><br/>
                 러시클랜 충무로/왕십리 지점의 정성준 관장님의 지도 아래, <br/>
-                블루-퍼플 벨트 이상의 코치진이 훈련을 진행합니다. <br/>
-                매주 2회 수업과 스파링이 진행됩니다. <br/>
+                블루-퍼플 벨트 이상의 코치진이 훈련을 진행합니다. <br/><br/>
+                매주 2회 수업과 스파링으로 이루어진 훈련이, <br/>
                 매달 마지막은 오픈 매트가 진행됩니다. <br/> <br/>
                 샤워장과 수건이 제공되며, <br/>
                 3층에 위치한 헬스장도 이용하실 수 있습니다. <br/>
@@ -287,7 +287,7 @@
             <div class="grid grid-cols-2 gap-8">
                 <div>
                     <h4 class="text-xs tracking-widest text-magnus-red mb-2">LOCATION</h4>
-                    <p class="text-sm">서울 중구 서애로1길 10 3-4층<br/>러쉬클랜 충무로점</p>
+                    <p class="text-sm">서울 중구 서애로1길 10 4층<br/>러쉬클랜 충무로점</p>
                 </div>
                 <div>
                     <h4 class="text-xs tracking-widest text-magnus-red mb-2">SCHEDULE</h4>
@@ -307,10 +307,6 @@
             {% if not kakao_js_key %}
                 <span class="text-gray-600 italic text-xl p-4 text-center">
                     Map Unavailable<br/>
-                    <span class="text-sm not-italic font-sans text-gray-700 mt-2 block">
-                        Please add <code>KAKAO_JS_KEY</code> to .env<br/>
-                        And add domain to Kakao Developers
-                    </span>
                 </span>
             {% endif %}
             
@@ -408,8 +404,45 @@
         }
     }
 
+    // Helper: Animate Chart
+    function animateChart(targetPercent) {
+        const chart = document.getElementById('rate-chart');
+        const text = document.getElementById('rate-percent');
+        if (!chart || !text) return; // Safety check
+
+        let current = 0;
+        const duration = 500; // 0.6 seconds
+        const startTime = performance.now();
+
+        function update(time) {
+            const elapsed = time - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            // Ease-out cubic function for smooth effect
+            const ease = 1 - Math.pow(1 - progress, 3);
+            
+            current = Math.floor(targetPercent * ease);
+            
+            chart.style.background = `conic-gradient(black ${current}%, #f3f4f6 0)`;
+            text.textContent = current + "%";
+
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            }
+        }
+        requestAnimationFrame(update);
+    }
+
+    // Initial Animation & Icon Load
+    document.addEventListener('DOMContentLoaded', () => {
+        // Initial animation with server-side rendered value
+        animateChart({{ my_record.attendance_rate }});
+        lucide.createIcons();
+    });
+
     let currentYear = {{ initial_year }};
     let currentMonth = {{ initial_month }};
+    let recordYear = {{ initial_year }};
+    let recordMonth = {{ initial_month }};
 
     async function changeRecordMonth(delta) {
         let newDate = new Date(recordYear, recordMonth - 1 + delta, 1);
@@ -432,10 +465,14 @@
             document.getElementById('record-month-label').innerHTML = data.month_name.replace(" ", "<br/>");
             
             // Update Rate Card
-            document.getElementById('rate-percent').textContent = data.attendance_rate + "%";
+            // document.getElementById('rate-percent').textContent = data.attendance_rate + "%"; // Replaced by animation
             document.getElementById('rate-count').textContent = data.attendance_count;
             document.getElementById('rate-total').textContent = data.valid_days_count;
-            document.getElementById('rate-chart').style.background = `conic-gradient(black ${data.attendance_rate}%, #f3f4f6 0)`;
+            // document.getElementById('rate-chart').style.background = ... // Replaced by animation
+            
+            // Trigger Animation
+            animateChart(data.attendance_rate);
+
             document.getElementById('rate-year-label').textContent = data.short_year + ".";
             document.getElementById('rate-month-label').textContent = data.month_num + "월";
             
