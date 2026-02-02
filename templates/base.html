@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko" class="scroll-smooth snap-y snap-mandatory h-screen overflow-y-scroll">
+<html lang="ko" class="scroll-smooth snap-y snap-mandatory h-full overflow-y-auto">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -35,11 +35,17 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
+        html {
+            overscroll-behavior-y: none; /* Prevent iOS rubber-banding */
+            -webkit-overflow-scrolling: touch; /* Smooth momentum scrolling */
+            height: 100%; /* Ensure full height */
+        }
         body {
             background-color: #FFFFFF;
             color: #000000;
             font-family: 'Pretendard', sans-serif;
             letter-spacing: -0.02em;
+            height: 100%; /* Ensure full height */
         }
         
         /* Minimalist Navigation Blur */
