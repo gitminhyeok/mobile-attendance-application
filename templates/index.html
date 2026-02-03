@@ -385,7 +385,7 @@
             const data = await response.json();
             
             if (response.ok) {
-                alert("출석이 완료되었습니다: " + data.message);
+                alert(data.message);
                 window.location.reload();
             } else {
                 alert(data.message);
