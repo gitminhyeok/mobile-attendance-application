@@ -344,6 +344,7 @@ async def admin_dashboard(request: Request):
         "request": request,
         "uid": uid, 
         "is_admin_page": True, # Flag to hide Record/Ranking in nav
+        "is_admin_user": True, # Flag to show ADMIN link
         "warning_list": warning_list,
         "dropout_list": dropout_list,
         "sick_list": sick_list,

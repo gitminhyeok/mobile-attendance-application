@@ -281,6 +281,10 @@ async def read_root(request: Request): # Removed query params from root
     status_color = "text-gray-500"
     days_absent = -1
     
+    # Check Admin
+    admin_uids = [str(x).strip() for x in os.getenv("ADMIN_UID", "").split(",") if x.strip()]
+    is_admin_user = (str(uid).strip() in admin_uids) if uid else False
+    
     if uid and db:
         # Get User Doc & Check Status
         user_doc = db.collection("users").document(uid).get()
@@ -446,6 +450,7 @@ async def read_root(request: Request): # Removed query params from root
         "initial_month": now.month,
         "kakao_js_key": os.getenv("KAKAO_JS_KEY"),
         "status_message": status_message,
-        "status_color": status_color
+        "status_color": status_color,
+        "is_admin_user": is_admin_user # Pass admin status
     }
     return templates.TemplateResponse("index.html", context)

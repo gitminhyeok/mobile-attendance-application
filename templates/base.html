@@ -97,14 +97,17 @@
                 
                 <!-- Navigation Menu (Visible on Mobile with smaller scale) -->
                 <nav class="flex items-center space-x-4 md:space-x-12 ml-4">
-                    <a href="/" class="text-[10px] md:text-sm hover-underline tracking-tight">HOME</a>
+                    <a href="/#home" class="text-[10px] md:text-sm hover-underline tracking-tight">HOME</a>
                     {% if uid and not is_pending and not is_admin_page %}
                         <a href="#record" class="text-[10px] md:text-sm hover-underline tracking-tight">RECORD</a>
                         <a href="#ranking" class="text-[10px] md:text-sm hover-underline tracking-tight">RANKING</a>
                     {% endif %}
-                    
+
+                    {% if is_admin_user and not is_admin_page %}
+                        <a href="/admin" class="text-[10px] md:text-sm hover-underline tracking-tight">ADMIN</a>
+                    {% endif %}
                     {% if uid %}
-                        <a href="/logout" class="text-[9px] md:text-xs border-b border-black md:border-b-2 pb-0.5 hover:text-magnus-red hover:border-magnus-red transition-colors shrink-0">LOGOUT</a>
+                        <a href="/logout" class="text-[10px] md:text-sm hover-underline tracking-tight hover:text-magnus-red hover:border-magnus-red transition-colors shrink-0">LOGOUT</a>
                     {% else %}
                         <a href="/login/kakao" class="text-[10px] md:text-sm tracking-tight hover:text-magnus-red transition-colors shrink-0">LOGIN</a>
                     {% endif %}
