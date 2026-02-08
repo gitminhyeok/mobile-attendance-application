@@ -53,12 +53,14 @@
                             <div class="absolute inset-0 bg-black rounded-full animate-ping opacity-20"></div>
                             
                             <button onclick="doAttendance()" id="attend-btn" 
-                                    class="relative w-24 h-24 bg-gradient-to-br from-gray-800 to-black rounded-full flex items-center justify-center shadow-[0_15px_35px_rgba(0,0,0,0.3)] transition-all duration-300 hover:scale-110 active:scale-95 group animate-bounce-slow">
-                                <i data-lucide="fingerprint" class="w-10 h-10 text-white pointer-events-none group-hover:scale-110 transition-transform"></i>
+                                    class="relative w-20 h-20 rounded-full border-4 border-black bg-white flex items-center justify-center transition-all duration-10 hover:scale-110 active:scale-95">
+                                    <!-- class="relative w-20 h-20 bg-gradient-to-br from-gray-800 to-black rounded-full border-4 border-black flex items-center justify-center shadow-[0_15px_35px_rgba(0,0,0,0.3)] transition-all duration-10 hover:scale-110 active:scale-95"> -->
+                                <i data-lucide="squircle" class="w-10 h-10 text-black pointer-events-none group-hover:scale-110 transition-transform"></i>
+                                <!-- <i class="w-10 h-10 text-white pointer-events-none group-hover:scale-110 transition-transform"></i> -->
                             </button>
                         </div>
                         
-                        <p class="text-l tracking-widest text-black animate-pulse">출석</p>
+                        <p class="text-l tracking-widest text-black animate-pulse">출석하기</p>
                     </div>
                 {% endif %}
             {% else %}
@@ -72,8 +74,8 @@
     <!-- Scroll Indicator -->
     {% if uid and not is_pending %}
     <div class="absolute bottom-6 md:bottom-10 animate-bounce flex flex-col items-center">
-        <span class="text-[10px] tracking-widest text-gray-300 mb-2 uppercase">Scroll</span>
-        <i data-lucide="chevron-down" class="w-6 h-6 text-gray-300"></i>
+        <span class="text-[10px] tracking-widest text-gray-400 mb-2 uppercase">Scroll</span>
+        <i data-lucide="chevron-down" class="w-6 h-6 text-gray-400"></i>
     </div>
     {% endif %}
 </section>
