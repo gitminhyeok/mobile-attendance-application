@@ -71,7 +71,7 @@ def check_attendance_time():
         # 16:00 기준
         # 출석: 15:45 ~ 16:15 (전후 15분)
         # 지각: 16:15:01 ~ 18:00 (기준 시간 2시간까지)
-        start_attend = time(12, 45)
+        start_attend = time(15, 45)
         end_attend = time(16, 16)
         end_late = time(18, 0)
 
