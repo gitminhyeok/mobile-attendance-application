@@ -263,7 +263,7 @@
                         </div>
                     </div>
                     <div class="text-right">
-                        <span class="text-[10px] font-bold block uppercase {{ 'text-red-500' if user.days_absent >= 14 else 'text-gray-400' }}">
+                        <span class="text-[10px] font-bold block uppercase {{ 'text-red-500' if user.days_absent >= 14 + 2 else 'text-gray-400' }}">
                             {{ user.last_date }}
                         </span>
                         <div class="flex items-center justify-end mt-1 gap-1">
