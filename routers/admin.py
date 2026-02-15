@@ -295,15 +295,15 @@ async def admin_dashboard(request: Request):
             sick_list.append(user_info)
         else:
             # Dropout Criteria: 21+ days OR 2 unnotified absences
-            if days_absent >= 21 or unnotified_count >= 2:
+            if days_absent >= 21 + 2 or unnotified_count >= 2:
                 reasons = []
-                if days_absent >= 21: reasons.append("장기 결석 (3주+)")
+                if days_absent >= 21 + 2: reasons.append("장기 결석 (3주+)")
                 if unnotified_count >= 2: reasons.append(f"미통보 불참 2회 ({unnotified_date1}, {unnotified_date2})")
                 user_info['reason'] = " & ".join(reasons)
                 dropout_list.append(user_info)
             
             # Warning Criteria: Only 14+ days absence
-            elif days_absent >= 14:
+            elif days_absent >= 14 + 2:
                 user_info['reason'] = "2주 이상 결석"
                 warning_list.append(user_info)
             

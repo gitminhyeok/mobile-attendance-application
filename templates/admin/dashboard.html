@@ -225,7 +225,7 @@
                                     class="w-6 h-6 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 mx-auto block">
                             </td>
                             <td class="py-4 text-center">
-                                <span class="text-xs font-bold {{ 'text-red-500' if user.days_absent >= 14 else 'text-gray-500' }}">
+                                <span class="text-xs font-bold {{ 'text-red-500' if user.days_absent >= 14 + 2 else 'text-gray-500' }}">
                                     {{ user.last_date }}
                                 </span>
                                 <div class="text-[9px] text-gray-400">({{ user.days_absent }} days ago)</div>

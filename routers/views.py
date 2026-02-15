@@ -202,9 +202,9 @@ async def get_record_calendar_api(request: Request, year: int, month: int):
     for day in check_range:
         d = datetime(year, month, day)
         if d.weekday() in [5, 6]: # Sat, Sun
-             # For current day check time? Simplified: just count day if it's passed or today
-             valid_days_count += 1
-             
+            # For current day check time? Simplified: just count day if it's passed or today
+            valid_days_count += 1
+            
     if valid_days_count == 0: valid_days_count = 1 # Avoid division by zero
 
     # 2. Get Calendar & Count
@@ -407,14 +407,14 @@ async def read_root(request: Request): # Removed query params from root
         elif days_absent == -1:
             status_message = "첫 출석을 기다리고 있어요 🌱"
             status_color = "text-gray-500"
-        elif days_absent >= 21 or unnotified_count >= 2:
+        elif days_absent >= 21 + 2 or unnotified_count >= 2:
             reason = "미통보 불참 누적" if unnotified_count >= 2 else "장기 결석"
             status_message = f"제적 대상입니다 🚨 ({reason})"
             status_color = "text-red-600"
-        elif days_absent >= 14:
+        elif days_absent >= 14 + 2:
             status_message = "벌써 2주째 참여하지 않았어요 ⚠️"
             status_color = "text-yellow-600"
-        elif days_absent < 7:
+        elif days_absent < 7 + 2:
             if my_record["current_month_count"] > 1:
                 status_message = "훌륭해요, 연속으로 참석 중이예요 🔥"
                 status_color = "text-blue-600"

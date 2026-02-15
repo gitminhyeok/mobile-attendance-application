@@ -241,7 +241,8 @@
                                 <div class="flex items-center">
                                     <img src="{{ item.profile_image if item.profile_image else 'https://ui-avatars.com/api/?name=' + item.nickname + '&background=random' }}" 
                                         alt="{{ item.nickname }}" 
-                                        class="w-10 h-10 rounded-full object-cover mr-3 border border-gray-200 shadow-sm bg-gray-100">
+                                        draggable="false" oncontextmenu="return false;"
+                                        class="w-10 h-10 rounded-full object-cover mr-3 border border-gray-200 shadow-sm bg-gray-100 protected-img">
                                     <div>
                                         <span class="font-bold text-lg {{ 'text-magnus-red' if item.is_me else '' }}">{{ item.nickname }}</span>
                                         {% if item.is_me %}<span class="ml-2 text-[10px] bg-black text-white px-1.5 py-0.5 rounded align-middle">ME</span>{% endif %}
@@ -367,6 +368,14 @@
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 2px; }
+    
+    /* Image Protection for Ranking */
+    .protected-img {
+        -webkit-user-drag: none;
+        user-select: none;
+        -webkit-touch-callout: none; /* iOS Safari */
+        pointer-events: none; /* Block clicks/touches completely if no interaction needed */
+    }
 </style>
 
 <script>
@@ -566,7 +575,7 @@
                             <td class="py-5 text-xltext-black text-center">${item.rank}</td>
                             <td class="py-5 pl-4">
                                 <div class="flex items-center">
-                                    <img src="${profileImg}" alt="${item.nickname}" class="w-10 h-10 rounded-full object-cover mr-3 border border-gray-200 shadow-sm bg-gray-100">
+                                    <img src="${profileImg}" alt="${item.nickname}" draggable="false" oncontextmenu="return false;" class="w-10 h-10 rounded-full object-cover mr-3 border border-gray-200 shadow-sm bg-gray-100 protected-img">
                                     <div>
                                         <span class="font-bold text-lg ${item.is_me ? 'text-magnus-red' : ''}">${item.nickname}</span>
                                         ${item.is_me ? '<span class="ml-2 text-[10px] bg-black text-white px-1.5 py-0.5 rounded align-middle">ME</span>' : ''}
