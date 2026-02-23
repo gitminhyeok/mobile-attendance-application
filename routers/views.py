@@ -40,6 +40,11 @@ def get_ranking_data(db, target_date, valid_days_count, uid):
             
             u_doc = db.collection("users").document(u_id).get()
             u_data = u_doc.to_dict() if u_doc.exists else {}
+            
+            # Skip if user is withdrawn or not approved
+            if u_data.get("is_auth") != "approved":
+                continue
+                
             u_nick = u_data.get("nickname", "Unknown")
             u_profile = u_data.get("profile_image", "")
             

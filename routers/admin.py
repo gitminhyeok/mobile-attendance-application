@@ -118,26 +118,11 @@ async def delete_user(request: Request, uid: str = Form(...)):
     if not db:
         return JSONResponse(status_code=500, content={"message": "Database error"})
 
-    # 1. Delete Attendance Records
-    attendance_docs = db.collection("attendance").where(filter=FieldFilter("user_id", "==", uid)).stream()
-    deleted_attendance = 0
-    batch = db.batch()
+    # Soft Delete: Change status to 'withdrawn' and keep attendance records
+    user_ref = db.collection("users").document(uid)
+    user_ref.update({"is_auth": "withdrawn"})
     
-    for doc in attendance_docs:
-        batch.delete(doc.reference)
-        deleted_attendance += 1
-        
-        # Commit every 400 ops to stay safe within limit (500)
-        if deleted_attendance % 400 == 0:
-            batch.commit()
-            batch = db.batch()
-            
-    batch.commit() # Commit remaining
-    
-    # 2. Delete User
-    db.collection("users").document(uid).delete()
-    
-    return JSONResponse(status_code=200, content={"message": f"User and {deleted_attendance} attendance records deleted."})
+    return JSONResponse(status_code=200, content={"message": "User moved to withdrawn list."})
 
 @router.post("/admin/api/user/update")
 async def update_user_info(
@@ -288,6 +273,9 @@ async def admin_dashboard(request: Request):
         if is_auth == 'pending':
             pending_list.append(user_info)
             continue 
+            
+        if is_auth == 'withdrawn':
+            continue # Skip withdrawn users from active dashboard
         
         all_users_list.append(user_info)
 

@@ -100,11 +100,16 @@ def allback(code: str, request: Request, response: Response):
             user_ref.set(user_data)
         else:
             # Existing User: Update profile image and last login only
-            # Do NOT update nickname, as Admin might have changed it to a real name
+            user_data = user_doc.to_dict()
             update_data = {
                 "profile_image": profile_image,
                 "last_login": firestore.SERVER_TIMESTAMP
             }
+            
+            # If user was 'withdrawn', set to 'pending' to require re-approval
+            if user_data.get("is_auth") == "withdrawn":
+                update_data["is_auth"] = "pending"
+                
             user_ref.update(update_data)
         
     # 5. Create Session (Simple Cookie for MVP)
