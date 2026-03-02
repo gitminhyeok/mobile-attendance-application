@@ -7,8 +7,13 @@ load_dotenv()
 
 # Constants
 KST = pytz.timezone('Asia/Seoul')
-ALLOWED_IP = os.getenv("ALLOWED_IP", "127.0.0.1") 
-# Example: "211.111.111.111"
+ALLOWED_IP = os.getenv("ALLOWED_IP", "127.0.0.1")
+
+# Absence thresholds (days since last attendance)
+# 3 weeks + 2 day buffer for weekday gap between training sessions
+DROPOUT_DAYS = 23   # 21 + 2: eligible for removal
+WARNING_DAYS = 16   # 14 + 2: warning threshold
+ACTIVE_DAYS = 9     #  7 + 2: considered actively attending
 
 def get_client_ip(request):
     """

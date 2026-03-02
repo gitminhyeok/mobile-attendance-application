@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko" class="scroll-smooth snap-y snap-mandatory h-full overflow-y-auto">
+<html lang="ko" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -33,19 +33,37 @@
     
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Viewport Height Fix for Mobile/In-App Browsers -->
+    <script>
+        (function() {
+            function setVH() {
+                document.documentElement.style.setProperty('--vh', window.innerHeight * 0.01 + 'px');
+            }
+            setVH();
+            window.addEventListener('resize', setVH);
+            window.addEventListener('orientationchange', function() {
+                setTimeout(setVH, 100);
+            });
+        })();
+    </script>
     
     <style>
         html {
-            overscroll-behavior-y: none; /* Prevent iOS rubber-banding */
-            -webkit-overflow-scrolling: touch; /* Smooth momentum scrolling */
-            height: 100%; /* Ensure full height */
+            overscroll-behavior-y: contain; /* Prevent pull-to-refresh but allow natural overscroll */
         }
         body {
             background-color: #FFFFFF;
             color: #000000;
             font-family: 'Pretendard', sans-serif;
             letter-spacing: -0.02em;
-            height: 100%; /* Ensure full height */
+        }
+
+        /* Mobile-safe full viewport height */
+        .section-full {
+            min-height: 100vh;                         /* Fallback: older browsers */
+            min-height: 100svh;                        /* Modern browsers: stable viewport height */
+            min-height: calc(var(--vh, 1vh) * 100);    /* JS fallback: in-app browsers */
         }
         
         /* Minimalist Navigation Blur */
@@ -83,7 +101,7 @@
         }
     </style>
 </head>
-<body class="antialiased text-black flex flex-col min-h-screen">
+<body class="antialiased text-black flex flex-col min-h-full">
     
     <!-- Minimal Header -->
     <header class="fixed top-0 w-full z-50 nav-blur">

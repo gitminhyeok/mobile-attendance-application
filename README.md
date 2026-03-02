@@ -57,6 +57,9 @@ KAKAO_REST_API_KEY="your_kakao_rest_api_key"
 KAKAO_REDIRECT_URI="http://localhost:8000/auth/kakao/callback"
 KAKAO_JS_KEY="your_kakao_javascript_key" # 카카오 지도용
 
+# 세션 보안 (프로덕션 필수)
+SECRET_KEY="your_random_secret_key_here"
+
 # 출석 설정
 ALLOWED_IP="127.0.0.1, 211.xxx.xxx.xxx"
 

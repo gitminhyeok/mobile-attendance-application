@@ -1,81 +1,59 @@
+import os
+import re
+import logging
+from datetime import datetime, timedelta
+from typing import List
 from fastapi import APIRouter, Request, HTTPException, Depends, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from database import get_db
-from logic import get_current_kst_time
-from datetime import datetime, timedelta
-import os
-import re
-from dotenv import load_dotenv
-from google.cloud.firestore_v1.base_query import FieldFilter
 from pydantic import BaseModel
-from typing import List
+from database import get_db
+from logic import get_current_kst_time, DROPOUT_DAYS, WARNING_DAYS
+from dependencies import get_current_user_uid, require_admin, ADMIN_UIDS
+from google.cloud.firestore_v1.base_query import FieldFilter
 from firebase_admin import firestore
 
-load_dotenv()
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
-# Get admin UIDs and clean them up
-ADMIN_UIDS = [str(uid).strip() for uid in os.getenv("ADMIN_UID", "").split(",") if uid.strip()]
-
-def is_admin(request: Request):
-    uid = request.cookies.get("user_uid")
-    
-    # Debugging Logs
-    print(f"--- Admin Check ---")
-    print(f"Cookie UID: '{uid}' (Type: {type(uid)})")
-    print(f"Authorized UIDs: {ADMIN_UIDS}")
-    
-    if not uid:
-        print("Result: No UID in cookie.")
-        return False
-        
-    if str(uid).strip() not in ADMIN_UIDS:
-        print("Result: UID not in authorized list.")
-        return False
-        
-    print("Result: Authorized!")
-    return True
 
 class BatchAttendanceRequest(BaseModel):
     date: str
     user_ids: List[str]
-    status: str # 'present', 'late', 'absent'
+    status: str  # 'present', 'late', 'absent'
+
 
 @router.get("/admin/api/attendance/daily")
-async def get_daily_attendance(request: Request, date: str):
-    if not is_admin(request):
-        return JSONResponse(status_code=403, content={"message": "Unauthorized"})
-    
+async def get_daily_attendance(request: Request, date: str, admin_uid: str = Depends(require_admin)):
     db = get_db()
     if not db:
         return JSONResponse(status_code=500, content={"message": "Database error"})
 
-    # Query all attendance for this date
     docs = db.collection("attendance").where(filter=FieldFilter("date", "==", date)).stream()
-    
+
     result = {}
     for doc in docs:
         data = doc.to_dict()
         result[data['user_id']] = data['status']
-        
+
     return JSONResponse(result)
 
+
 @router.post("/admin/api/attendance/batch")
-async def batch_update_attendance(request: Request, payload: BatchAttendanceRequest):
-    if not is_admin(request):
-        return JSONResponse(status_code=403, content={"message": "Unauthorized"})
-    
+async def batch_update_attendance(request: Request, payload: BatchAttendanceRequest, admin_uid: str = Depends(require_admin)):
+    # CSRF check
+    if request.headers.get("X-Requested-With") != "XMLHttpRequest":
+        return JSONResponse(status_code=403, content={"message": "잘못된 요청입니다."})
+
     db = get_db()
     if not db:
         return JSONResponse(status_code=500, content={"message": "Database error"})
-        
+
     updated_count = 0
-    
+
     for uid in payload.user_ids:
-        # Check existing
         docs = (
             db.collection("attendance")
             .where(filter=FieldFilter("user_id", "==", uid))
@@ -84,20 +62,17 @@ async def batch_update_attendance(request: Request, payload: BatchAttendanceRequ
             .stream()
         )
         existing_doc = next(docs, None)
-        
+
         if payload.status == 'absent':
             if existing_doc:
                 existing_doc.reference.delete()
                 updated_count += 1
         else:
-            # present or late
             if existing_doc:
-                # Update status if changed
                 if existing_doc.to_dict().get('status') != payload.status:
                     existing_doc.reference.update({"status": payload.status})
                     updated_count += 1
             else:
-                # Create new
                 new_data = {
                     "user_id": uid,
                     "date": payload.date,
@@ -109,20 +84,22 @@ async def batch_update_attendance(request: Request, payload: BatchAttendanceRequ
 
     return JSONResponse(status_code=200, content={"message": f"Processed {updated_count} updates."})
 
+
 @router.post("/admin/api/user/delete")
-async def delete_user(request: Request, uid: str = Form(...)):
-    if not is_admin(request):
-        return JSONResponse(status_code=403, content={"message": "Unauthorized"})
-    
+async def delete_user(request: Request, uid: str = Form(...), admin_uid: str = Depends(require_admin)):
+    # CSRF check
+    if request.headers.get("X-Requested-With") != "XMLHttpRequest":
+        return JSONResponse(status_code=403, content={"message": "잘못된 요청입니다."})
+
     db = get_db()
     if not db:
         return JSONResponse(status_code=500, content={"message": "Database error"})
 
-    # Soft Delete: Change status to 'withdrawn' and keep attendance records
     user_ref = db.collection("users").document(uid)
     user_ref.update({"is_auth": "withdrawn"})
-    
+
     return JSONResponse(status_code=200, content={"message": "User moved to withdrawn list."})
+
 
 @router.post("/admin/api/user/update")
 async def update_user_info(
@@ -131,14 +108,16 @@ async def update_user_info(
     nickname: str = Form(None),
     phone: str = Form(None),
     batch: str = Form(None),
-    is_auth: str = Form(None), # Changed from status
+    is_auth: str = Form(None),
     unnotified_date1: str = Form(""),
     unnotified_date2: str = Form(""),
-    is_sick_leave: bool = Form(False)
+    is_sick_leave: bool = Form(False),
+    admin_uid: str = Depends(require_admin),
 ):
-    if not is_admin(request):
-        return JSONResponse(status_code=403, content={"message": "Unauthorized"})
-    
+    # CSRF check
+    if request.headers.get("X-Requested-With") != "XMLHttpRequest":
+        return JSONResponse(status_code=403, content={"message": "잘못된 요청입니다."})
+
     db = get_db()
     if not db:
         return JSONResponse(status_code=500, content={"message": "Database error"})
@@ -149,24 +128,22 @@ async def update_user_info(
         "is_sick_leave": is_sick_leave
     }
 
-    # 0. Auth Status Update
     if is_auth:
         update_data["is_auth"] = is_auth.strip()
 
-    # 0. Nickname Update
     if nickname:
         update_data["nickname"] = nickname.strip()
 
-    # 1. Phone Validation & Formatting
+    # Phone Validation & Formatting
     if phone:
         raw_phone = re.sub(r'[^0-9]', '', phone)
         if raw_phone.startswith('010') and len(raw_phone) == 11:
-             formatted_phone = f"{raw_phone[:3]}-{raw_phone[3:7]}-{raw_phone[7:]}"
-             update_data["phone"] = formatted_phone
+            formatted_phone = f"{raw_phone[:3]}-{raw_phone[3:7]}-{raw_phone[7:]}"
+            update_data["phone"] = formatted_phone
         elif len(raw_phone) > 0:
-             update_data["phone"] = phone
-    
-    # 2. Batch Validation & Formatting (YY-MM)
+            update_data["phone"] = phone
+
+    # Batch Validation & Formatting (YY-MM)
     if batch:
         clean_batch = batch.strip()
         match = re.match(r'^(\d{2,4})-(\d{1,2})$', clean_batch)
@@ -190,15 +167,16 @@ async def update_user_info(
         user_ref = db.collection("users").document(uid)
         user_ref.set(update_data, merge=True)
         return JSONResponse(status_code=200, content={"message": "Updated successfully", "data": update_data})
-    
+
     return JSONResponse(status_code=200, content={"message": "No changes made"})
+
 
 @router.get("/admin", response_class=HTMLResponse)
 async def admin_dashboard(request: Request):
-    if not is_admin(request):
-        return RedirectResponse("/") 
+    uid = get_current_user_uid(request)
+    if not uid or uid not in ADMIN_UIDS:
+        return RedirectResponse("/")
 
-    uid = request.cookies.get("user_uid") # Get current admin's UID
     db = get_db()
     if not db:
         return HTMLResponse("Database Error", status_code=500)
@@ -209,10 +187,10 @@ async def admin_dashboard(request: Request):
     sick_list = []
     all_users_list = []
     pending_list = []
-    
+
     now = get_current_kst_time()
     today = now.date()
-    
+
     for user_doc in users_ref:
         user_data = user_doc.to_dict()
         user_id = user_data.get("uid")
@@ -221,20 +199,17 @@ async def admin_dashboard(request: Request):
         phone = user_data.get("phone", "")
         batch = user_data.get("batch", "")
         profile_image = user_data.get("profile_image", "")
-        
-        # Check is_auth first, then fallback to status, then default to approved
+
         is_auth = user_data.get("is_auth") or user_data.get("status", "approved")
-        
-        # New Fields for Unnotified Dates
+
         unnotified_date1 = user_data.get("unnotified_date1", "")
         unnotified_date2 = user_data.get("unnotified_date2", "")
         is_sick_leave = user_data.get("is_sick_leave", False)
-        
-        # Calculate count based on dates
+
         unnotified_count = 0
         if unnotified_date1: unnotified_count += 1
         if unnotified_date2: unnotified_count += 1
-        
+
         # Get last attendance
         last_attend_doc = (
             db.collection("attendance")
@@ -243,17 +218,17 @@ async def admin_dashboard(request: Request):
             .limit(1)
             .stream()
         )
-        
+
         last_date_str = "Never"
-        days_absent = -1 # New user / No attendance record
-        
+        days_absent = -1
+
         last_attend_list = list(last_attend_doc)
         if last_attend_list:
             data = last_attend_list[0].to_dict()
             last_date_str = data['date']
             last_date = datetime.strptime(last_date_str, "%Y-%m-%d").date()
             days_absent = (today - last_date).days
-            
+
         user_info = {
             "uid": user_id,
             "nickname": nickname,
@@ -269,32 +244,30 @@ async def admin_dashboard(request: Request):
             "is_sick_leave": is_sick_leave,
             "is_auth": is_auth
         }
-        
+
         if is_auth == 'pending':
             pending_list.append(user_info)
-            continue 
-            
+            continue
+
         if is_auth == 'withdrawn':
-            continue # Skip withdrawn users from active dashboard
-        
+            continue
+
         all_users_list.append(user_info)
 
         if is_sick_leave:
             sick_list.append(user_info)
         else:
-            # Dropout Criteria: 21+ days OR 2 unnotified absences
-            if days_absent >= 21 + 2 or unnotified_count >= 2:
+            # Dropout Criteria (using named constants)
+            if days_absent >= DROPOUT_DAYS or unnotified_count >= 2:
                 reasons = []
-                if days_absent >= 21 + 2: reasons.append("장기 결석 (3주+)")
+                if days_absent >= DROPOUT_DAYS: reasons.append("장기 결석 (3주+)")
                 if unnotified_count >= 2: reasons.append(f"미통보 불참 2회 ({unnotified_date1}, {unnotified_date2})")
                 user_info['reason'] = " & ".join(reasons)
                 dropout_list.append(user_info)
-            
-            # Warning Criteria: Only 14+ days absence
-            elif days_absent >= 14 + 2:
+            elif days_absent >= WARNING_DAYS:
                 user_info['reason'] = "2주 이상 결석"
                 warning_list.append(user_info)
-            
+
     # Sorting
     dropout_list.sort(key=lambda x: x['nickname'])
     warning_list.sort(key=lambda x: x['nickname'])
@@ -305,34 +278,31 @@ async def admin_dashboard(request: Request):
     # Group by Batch
     batch_groups = {}
     for user in all_users_list:
-        b = user.get('batch')
-        if not b:
-            b = "No Batch"
+        b = user.get('batch') or "No Batch"
         if b not in batch_groups:
             batch_groups[b] = []
         batch_groups[b].append(user)
-    
-    # Sort Batches: "No Batch" first, then Descending order (Latest first)
+
     def batch_sort_key(b_key):
         if b_key == "No Batch":
-            return "ZZ-ZZ" # Force to top
+            return "ZZ-ZZ"
         return b_key
 
     batch_list = []
     sorted_keys = sorted(batch_groups.keys(), key=batch_sort_key, reverse=True)
-    
+
     for key in sorted_keys:
         batch_list.append({
             "name": key,
-            "users": sorted(batch_groups[key], key=lambda u: u['nickname']), # Ensure name sort inside
+            "users": sorted(batch_groups[key], key=lambda u: u['nickname']),
             "count": len(batch_groups[key])
         })
 
     context = {
         "request": request,
-        "uid": uid, 
-        "is_admin_page": True, # Flag to hide Record/Ranking in nav
-        "is_admin_user": True, # Flag to show ADMIN link
+        "uid": uid,
+        "is_admin_page": True,
+        "is_admin_user": True,
         "warning_list": warning_list,
         "dropout_list": dropout_list,
         "sick_list": sick_list,

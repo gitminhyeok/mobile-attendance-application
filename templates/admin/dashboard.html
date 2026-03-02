@@ -609,6 +609,7 @@
         try {
             const response = await fetch('/admin/api/user/update', {
                 method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 body: formData
             });
             const data = await response.json();
@@ -679,7 +680,7 @@
         formData.append('batch', document.getElementById('edit-batch').value);
 
         try {
-            const response = await fetch('/admin/api/user/update', { method: 'POST', body: formData });
+            const response = await fetch('/admin/api/user/update', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: formData });
             const data = await response.json();
             if (response.ok) {
                 alert(`✅ 가입이 승인되었습니다!`);
@@ -709,6 +710,7 @@
         try {
             const response = await fetch('/admin/api/user/delete', {
                 method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 body: formData
             });
             const data = await response.json();
@@ -748,6 +750,7 @@
         try {
             const response = await fetch('/admin/api/user/update', {
                 method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 body: formData
             });
             const data = await response.json();
@@ -922,7 +925,7 @@
         try {
             const res = await fetch('/admin/api/attendance/batch', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                 body: JSON.stringify({
                     date: selectedDate,
                     user_ids: userIds,

@@ -4,7 +4,7 @@
 
 {% block content %}
 <!-- 1. Hero Section (Attendance) -->
-<section id="home" class="min-h-screen flex flex-col items-center justify-center md:justify-center pt-32 md:pt-20 px-6 snap-start relative">
+<section id="home" class="section-full flex flex-col items-center justify-center md:justify-center pt-32 md:pt-20 px-6 relative">
     <div class="max-w-4xl w-full text-center -mt-16 md:mt-0">
         <!-- Main Logo Image instead of Typography -->
         <div class="mb-8 md:mb-12 animate-[slideUp_1s_ease-out] flex flex-col items-center">
@@ -82,7 +82,7 @@
 
 <!-- 2. Record Section (Visible only if logged in and approved) -->
 {% if uid and not is_pending %}
-<section id="record" class="min-h-screen py-32 px-6 bg-magnus-gray flex items-center snap-start">
+<section id="record" class="section-full py-32 px-6 bg-magnus-gray flex items-center">
     <div class="max-w-6xl mx-auto w-full">
         <!-- Dashboard Header -->
         <div class="mb-8 animate-[fadeIn_1s_ease-out]">
@@ -203,7 +203,7 @@
 
 <!-- 3. Ranking Section -->
 {% if uid and not is_pending %}
-<section id="ranking" class="py-32 px-6 bg-white snap-start">
+<section id="ranking" class="py-32 px-6 bg-white">
     <div class="max-w-6xl mx-auto w-full">
         <div class="text-center mb-12">
             <!-- <h2 class="text-xs font-black tracking-widest text-magnus-red uppercase mb-4">Leaderboard</h2> -->
@@ -273,7 +273,7 @@
 
 <!-- 4. About Section -->
 {% if uid and not is_pending %}
-<section id="about" class="py-32 bg-black text-white px-6 snap-start">
+<section id="about" class="py-32 bg-black text-white px-6">
     <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
         <div>
             <h2 class="text-3xl md:text-4xl mb-8 leading-tight">팀 마그누스는</h2>
@@ -313,10 +313,10 @@
                 </span>
             {% endif %}
             
-            <!-- Discrete UID for Admin reference -->
-            {% if uid %}
+            <!-- Admin-only reference -->
+            {% if is_admin_user %}
             <div class="absolute bottom-2 right-4 text-[8px] text-gray-800 select-all opacity-30 hover:opacity-100 transition-opacity z-10">
-                REF_{{ uid }}
+                ADMIN
             </div>
             {% endif %}
         </div>
@@ -391,7 +391,7 @@
         try {
             const response = await fetch('/attendance', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
             });
             const data = await response.json();
             
@@ -454,8 +454,12 @@
     let currentMonth = {{ initial_month }};
     let recordYear = {{ initial_year }};
     let recordMonth = {{ initial_month }};
+    let isRecordLoading = false;
+    let isRankingLoading = false;
 
     async function changeRecordMonth(delta) {
+        if (isRecordLoading) return;
+        isRecordLoading = true;
         let newDate = new Date(recordYear, recordMonth - 1 + delta, 1);
         
         let newYear = newDate.getFullYear();
@@ -535,9 +539,12 @@
             else nextBtn.classList.remove('invisible');
             lucide.createIcons();
         } catch (error) { console.error(error); alert("캘린더를 불러오지 못했습니다."); }
+        finally { isRecordLoading = false; }
     }
 
     async function changeMonth(delta) {
+        if (isRankingLoading) return;
+        isRankingLoading = true;
         let newDate = new Date(currentYear, currentMonth - 1 + delta, 1);
         
         let newYear = newDate.getFullYear();
@@ -598,6 +605,7 @@
             else nextBtn.classList.remove('invisible');
             lucide.createIcons();
         } catch (error) { console.error(error); alert("랭킹 데이터를 불러오지 못했습니다."); }
+        finally { isRankingLoading = false; }
     }
 </script>
 {% endblock %}
