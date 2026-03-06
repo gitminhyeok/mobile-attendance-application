@@ -92,7 +92,7 @@ async def kakao_callback(request: Request, code: str, response: Response):
     profile_image = profile.get("profile_image_url") or properties.get("profile_image", "")
 
     # Validate profile image URL
-    if profile_image and not profile_image.startswith("https://"):
+    if profile_image and not profile_image.startswith("http://"):
         profile_image = ""
 
     logger.info(f"Logged in as {nickname} ({kakao_uid})")
