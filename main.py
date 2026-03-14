@@ -1,6 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
+import os
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -55,6 +56,22 @@ async def health():
     db = get_db()
     return {"status": "ok", "database": "connected" if db else "disconnected"}
 
+# Vercel Cron job endpoint
+@app.get("/api/cron")
+async def run_cron_job(authorization: str = Header(None)):
+    expected_secret = os.getenv("CRON_SECRET")
+
+    if not expected_secret or authorization != f"Bearer {expected_secret}":
+        logger.warning("Unauthorized cron attempt")
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    db = get_db()
+    logger.info("Cron job executed. Server is warmed up.")
+    return {
+        "ok": True,
+        "message": "Server warmed up successfuly",
+        "database": "connected" if db else "disconnected"
+    }
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
