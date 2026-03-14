@@ -1,4 +1,4 @@
-# Project: Magnus Attendance App (PRD)
+# Project: Magnus Attendance App (PRD) for aws
 
 ## 1. 프로젝트 개요 (Overview)
 - **프로젝트명**: Magnus (매그너스)
