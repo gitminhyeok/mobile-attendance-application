@@ -50,14 +50,14 @@ async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(status_code=500, content={"message": "Internal server error"})
 
 
-# favicon.png 요청 처리 라우터 추가
-@app.get("/favicon.png", include_in_schema=False)
-async def favicon():
-    # static 폴더 안에 favicon.png 파일이 실제로 존재해야 합니다.
-    favicon_path = "static/favicon.png"
-    if os.path.exists(favicon_path):
-        return FileResponse(favicon_path)
-    return JSONResponse(status_code=404, content={"message": "Favicon not found"})
+# # favicon.png 요청 처리 라우터 추가
+# @app.get("/favicon.png", include_in_schema=False)
+# async def favicon():
+#     # static 폴더 안에 favicon.png 파일이 실제로 존재해야 합니다.
+#     favicon_path = "static/favicon.png"
+#     if os.path.exists(favicon_path):
+#         return FileResponse(favicon_path)
+#     return JSONResponse(status_code=404, content={"message": "Favicon not found"})
 
 
 # Vercel Cron job endpoint
@@ -78,4 +78,4 @@ async def run_cron_job(authorization: str = Header(None)):
     }
 
 # Mount static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="public/static"), name="static")
