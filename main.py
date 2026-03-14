@@ -78,4 +78,5 @@ async def run_cron_job(authorization: str = Header(None)):
     }
 
 # Mount static files
-app.mount("/static", StaticFiles(directory="public/static"), name="static")
+if os.path.isdir("public/static"):
+    app.mount("/static", StaticFiles(directory="public/static"), name="static")
