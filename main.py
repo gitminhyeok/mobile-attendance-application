@@ -50,14 +50,15 @@ async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(status_code=500, content={"message": "Internal server error"})
 
 
-# # favicon.png 요청 처리 라우터 추가
-# @app.get("/favicon.png", include_in_schema=False)
-# async def favicon():
-#     # static 폴더 안에 favicon.png 파일이 실제로 존재해야 합니다.
-#     favicon_path = "static/favicon.png"
-#     if os.path.exists(favicon_path):
-#         return FileResponse(favicon_path)
-#     return JSONResponse(status_code=404, content={"message": "Favicon not found"})
+# favicon.png 및 favicon.ico 요청 처리
+@app.get("/favicon.png", include_in_schema=False)
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    # static 폴더 안의 로고 파일을 favicon으로 사용합니다.
+    favicon_path = os.path.join(os.path.dirname(__file__), "static", "team-magnus-logo.jpg")
+    if os.path.exists(favicon_path):
+        return FileResponse(favicon_path)
+    return JSONResponse(status_code=404, content={"message": "Favicon not found"})
 
 
 # Vercel Cron job endpoint
@@ -78,9 +79,12 @@ async def run_cron_job(authorization: str = Header(None)):
     }
 
 # Mount static files
+static_path = os.path.join(os.path.dirname(__file__), "static")
 try:
-    app.mount("/static", StaticFiles(directory="static"), name="static")
-    logger.info("Static files mounted successfully (Local environment).")
-except RuntimeError:
-    # Vercel 환경에서 폴더를 못 찾아 RuntimeError가 발생해도 앱이 죽지 않게 넘깁니다.
-    logger.info("Skipped mounting static files. Vercel CDN will handle them.")
+    if os.path.exists(static_path):
+        app.mount("/static", StaticFiles(directory=static_path), name="static")
+        logger.info(f"Static files mounted successfully at {static_path}")
+    else:
+        logger.warning(f"Static directory not found at {static_path}")
+except RuntimeError as e:
+    logger.error(f"Failed to mount static files: {e}")
