@@ -79,7 +79,7 @@ async def run_cron_job(authorization: str = Header(None)):
 
 # Mount static files
 try:
-    app.mount("/static", StaticFiles(directory="public/static"), name="static")
+    app.mount("/static", StaticFiles(directory="static"), name="static")
     logger.info("Static files mounted successfully (Local environment).")
 except RuntimeError:
     # Vercel 환경에서 폴더를 못 찾아 RuntimeError가 발생해도 앱이 죽지 않게 넘깁니다.
