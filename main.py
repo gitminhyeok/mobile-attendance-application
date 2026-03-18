@@ -78,6 +78,7 @@ async def run_cron_job(authorization: str = Header(None)):
         "database": "connected" if db else "disconnected"
     }
 
+
 # Mount static files
 static_path = os.path.join(os.path.dirname(__file__), "static")
 try:
