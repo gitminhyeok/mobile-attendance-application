@@ -327,4 +327,4 @@ async def admin_dashboard(request: Request):
         "memo_map": {u["uid"]: u["memo"] for u in all_users_list + pending_list},
         "memo_max_length": MEMO_MAX_LENGTH
     }
-    return templates.TemplateResponse("admin/dashboard.html", context)
+    return templates.TemplateResponse(request, "admin/dashboard.html", context)
