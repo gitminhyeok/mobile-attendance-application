@@ -315,4 +315,4 @@ async def admin_dashboard(request: Request):
         "total_users": len(all_users_list),
         "total_pending": len(pending_list)
     }
-    return templates.TemplateResponse("admin/dashboard.html", context)
+    return templates.TemplateResponse(request, "admin/dashboard.html", context)

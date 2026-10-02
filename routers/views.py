@@ -452,4 +452,4 @@ async def read_root(request: Request):
         "status_color": status_color,
         "is_admin_user": is_admin_user
     }
-    return templates.TemplateResponse("index.html", context)
+    return templates.TemplateResponse(request, "index.html", context)
