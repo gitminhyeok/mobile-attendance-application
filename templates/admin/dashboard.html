@@ -47,15 +47,29 @@
                 
                 <div class="overflow-y-auto max-h-[500px]">
                     {% if dropout_list %}
-                        <ul class="grid grid-cols-2 gap-2">
+                        <ul class="grid grid-cols-2 gap-2 md:grid-cols-1 md:gap-3">
                         {% for user in dropout_list %}
-                            <li class="p-3 bg-red-50 rounded-lg min-w-0">
-                                <div class="flex items-start justify-between gap-1">
-                                    <p class="font-bold text-gray-800 text-sm truncate">{{ user.nickname }}</p>
-                                    <span class="shrink-0 text-lg font-black text-red-600 leading-none">{{ user.days_absent }}<span class="text-[9px] text-gray-500 font-bold uppercase ml-0.5">d</span></span>
+                            <li class="p-3 md:p-4 bg-red-50 rounded-lg min-w-0">
+                                <!-- Mobile: compact 2-column card -->
+                                <div class="md:hidden">
+                                    <div class="flex items-start justify-between gap-1">
+                                        <p class="font-bold text-gray-800 text-sm truncate">{{ user.nickname }}</p>
+                                        <span class="shrink-0 text-lg font-black text-red-600 leading-none">{{ user.days_absent }}<span class="text-[9px] text-gray-500 font-bold uppercase ml-0.5">d</span></span>
+                                    </div>
+                                    <p class="text-[9px] text-gray-400 truncate">#{{ user.uid }}</p>
+                                    <p class="text-[10px] text-red-500 font-bold mt-1 break-keep">{{ user.reason if user.reason else 'Last seen: ' + user.last_date }}</p>
                                 </div>
-                                <p class="text-[9px] text-gray-400 truncate">#{{ user.uid }}</p>
-                                <p class="text-[10px] text-red-500 font-bold mt-1 break-keep">{{ user.reason if user.reason else 'Last seen: ' + user.last_date }}</p>
+                                <!-- PC: original single-column row -->
+                                <div class="hidden md:flex items-center justify-between">
+                                    <div>
+                                        <p class="font-bold text-gray-800">{{ user.nickname }} <span class="text-[10px] text-gray-400 font-normal ml-1">#{{ user.uid }}</span></p>
+                                        <p class="text-xs text-red-500 font-bold">{{ user.reason if user.reason else 'Last seen: ' + user.last_date }}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-2xl font-black text-red-600">{{ user.days_absent }}</span>
+                                        <span class="text-[10px] text-gray-500 block uppercase">Days</span>
+                                    </div>
+                                </div>
                             </li>
                         {% endfor %}
                         </ul>
@@ -85,15 +99,29 @@
 
                 <div class="overflow-y-auto max-h-[500px]">
                     {% if warning_list %}
-                        <ul class="grid grid-cols-2 gap-2">
+                        <ul class="grid grid-cols-2 gap-2 md:grid-cols-1 md:gap-3">
                         {% for user in warning_list %}
-                            <li class="p-3 bg-yellow-50 rounded-lg min-w-0">
-                                <div class="flex items-start justify-between gap-1">
-                                    <p class="font-bold text-gray-800 text-sm truncate">{{ user.nickname }}</p>
-                                    <span class="shrink-0 text-lg font-black text-yellow-600 leading-none">{{ user.days_absent }}<span class="text-[9px] text-gray-500 font-bold uppercase ml-0.5">d</span></span>
+                            <li class="p-3 md:p-4 bg-yellow-50 rounded-lg min-w-0">
+                                <!-- Mobile: compact 2-column card -->
+                                <div class="md:hidden">
+                                    <div class="flex items-start justify-between gap-1">
+                                        <p class="font-bold text-gray-800 text-sm truncate">{{ user.nickname }}</p>
+                                        <span class="shrink-0 text-lg font-black text-yellow-600 leading-none">{{ user.days_absent }}<span class="text-[9px] text-gray-500 font-bold uppercase ml-0.5">d</span></span>
+                                    </div>
+                                    <p class="text-[9px] text-gray-400 truncate">#{{ user.uid }}</p>
+                                    <p class="text-[10px] text-yellow-600 font-bold mt-1 break-keep">{{ user.reason if user.reason else 'Last seen: ' + user.last_date }}</p>
                                 </div>
-                                <p class="text-[9px] text-gray-400 truncate">#{{ user.uid }}</p>
-                                <p class="text-[10px] text-yellow-600 font-bold mt-1 break-keep">{{ user.reason if user.reason else 'Last seen: ' + user.last_date }}</p>
+                                <!-- PC: original single-column row -->
+                                <div class="hidden md:flex items-center justify-between">
+                                    <div>
+                                        <p class="font-bold text-gray-800">{{ user.nickname }} <span class="text-[10px] text-gray-400 font-normal ml-1">#{{ user.uid }}</span></p>
+                                        <p class="text-xs text-yellow-600 font-bold">{{ user.reason if user.reason else 'Last seen: ' + user.last_date }}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-2xl font-black text-yellow-600">{{ user.days_absent }}</span>
+                                        <span class="text-[10px] text-gray-500 block uppercase">Days</span>
+                                    </div>
+                                </div>
                             </li>
                         {% endfor %}
                         </ul>
@@ -114,15 +142,28 @@
 
                 <div class="overflow-y-auto max-h-[500px]">
                     {% if sick_list %}
-                        <ul class="grid grid-cols-2 gap-2">
+                        <ul class="grid grid-cols-2 gap-2 md:grid-cols-1 md:gap-3">
                         {% for user in sick_list %}
-                            <li class="p-3 bg-blue-50 rounded-lg min-w-0">
-                                <div class="flex items-start justify-between gap-1">
-                                    <p class="font-bold text-gray-800 text-sm truncate">{{ user.nickname }}</p>
-                                    <i data-lucide="pause-circle" class="shrink-0 w-4 h-4 text-blue-400"></i>
+                            <li class="p-3 md:p-4 bg-blue-50 rounded-lg min-w-0">
+                                <!-- Mobile: compact 2-column card -->
+                                <div class="md:hidden">
+                                    <div class="flex items-start justify-between gap-1">
+                                        <p class="font-bold text-gray-800 text-sm truncate">{{ user.nickname }}</p>
+                                        <i data-lucide="pause-circle" class="shrink-0 w-4 h-4 text-blue-400"></i>
+                                    </div>
+                                    <p class="text-[9px] text-gray-400 truncate">#{{ user.uid }}</p>
+                                    <p class="text-[10px] text-blue-500 font-bold mt-1">병결 휴식 중</p>
                                 </div>
-                                <p class="text-[9px] text-gray-400 truncate">#{{ user.uid }}</p>
-                                <p class="text-[10px] text-blue-500 font-bold mt-1">병결 휴식 중</p>
+                                <!-- PC: original single-column row -->
+                                <div class="hidden md:flex items-center justify-between">
+                                    <div>
+                                        <p class="font-bold text-gray-800">{{ user.nickname }} <span class="text-[10px] text-gray-400 font-normal ml-1">#{{ user.uid }}</span></p>
+                                        <p class="text-xs text-blue-500 font-bold">병결 휴식 중</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <i data-lucide="pause-circle" class="w-6 h-6 text-blue-400 inline-block"></i>
+                                    </div>
+                                </div>
                             </li>
                         {% endfor %}
                         </ul>
