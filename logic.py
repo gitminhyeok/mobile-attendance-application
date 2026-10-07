@@ -1,4 +1,5 @@
 import os
+import calendar
 from datetime import datetime, time, timedelta
 import pytz
 from dotenv import load_dotenv
@@ -14,6 +15,57 @@ ALLOWED_IP = os.getenv("ALLOWED_IP", "127.0.0.1")
 DROPOUT_DAYS = 23   # 21 + 2: eligible for removal
 WARNING_DAYS = 16   # 14 + 2: warning threshold
 ACTIVE_DAYS = 9     #  7 + 2: considered actively attending
+
+# Unnotified absence records expire after this many months
+UNNOTIFIED_EXPIRY_MONTHS = 3
+
+# Max length of the admin memo on a user
+MEMO_MAX_LENGTH = 50
+
+
+def parse_unnotified_date(date_str: str):
+    """Parse an unnotified date stored as 'YY-MM-DD' (or 'YYYY-MM-DD'). Returns None if invalid."""
+    for fmt in ("%y-%m-%d", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(date_str.strip(), fmt).date()
+        except (ValueError, AttributeError):
+            continue
+    return None
+
+
+def subtract_months(d, months: int):
+    """Return the same day `months` months earlier, clamped to the end of the month."""
+    month_index = d.year * 12 + (d.month - 1) - months
+    year, month = divmod(month_index, 12)
+    month += 1
+    last_day = calendar.monthrange(year, month)[1]
+    return d.replace(year=year, month=month, day=min(d.day, last_day))
+
+
+def purge_expired_unnotified(user_ref, user_data: dict, today) -> tuple:
+    """
+    Drop unnotified dates older than UNNOTIFIED_EXPIRY_MONTHS and write the change back.
+    Remaining dates are compacted into unnotified_date1 first.
+    Returns the (unnotified_date1, unnotified_date2) that are still valid.
+    """
+    original = [user_data.get("unnotified_date1", "") or "", user_data.get("unnotified_date2", "") or ""]
+    cutoff = subtract_months(today, UNNOTIFIED_EXPIRY_MONTHS)
+
+    kept = []
+    for date_str in original:
+        if not date_str:
+            continue
+        parsed = parse_unnotified_date(date_str)
+        # Keep unparseable values so an admin can fix them by hand
+        if parsed is None or parsed >= cutoff:
+            kept.append(date_str)
+
+    kept += [""] * (2 - len(kept))
+
+    if kept != original:
+        user_ref.update({"unnotified_date1": kept[0], "unnotified_date2": kept[1]})
+
+    return kept[0], kept[1]
 
 def get_client_ip(request):
     """

@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from database import get_db
-from logic import get_current_kst_time, DROPOUT_DAYS, WARNING_DAYS
+from logic import get_current_kst_time, purge_expired_unnotified, DROPOUT_DAYS, WARNING_DAYS, MEMO_MAX_LENGTH
 from dependencies import get_current_user_uid, require_admin, ADMIN_UIDS
 from google.cloud.firestore_v1.base_query import FieldFilter
 from firebase_admin import firestore
@@ -112,11 +112,15 @@ async def update_user_info(
     unnotified_date1: str = Form(""),
     unnotified_date2: str = Form(""),
     is_sick_leave: bool = Form(False),
+    memo: str = Form(None),
     admin_uid: str = Depends(require_admin),
 ):
     # CSRF check
     if request.headers.get("X-Requested-With") != "XMLHttpRequest":
         return JSONResponse(status_code=403, content={"message": "잘못된 요청입니다."})
+
+    if memo is not None and len(memo.strip()) > MEMO_MAX_LENGTH:
+        return JSONResponse(status_code=400, content={"message": f"메모는 {MEMO_MAX_LENGTH}자 이내로 입력해주세요."})
 
     db = get_db()
     if not db:
@@ -127,6 +131,10 @@ async def update_user_info(
         "unnotified_date2": unnotified_date2.strip(),
         "is_sick_leave": is_sick_leave
     }
+
+    # Only touch memo when the form actually sends it (approval flow does not)
+    if memo is not None:
+        update_data["memo"] = memo.strip()
 
     if is_auth:
         update_data["is_auth"] = is_auth.strip()
@@ -202,8 +210,9 @@ async def admin_dashboard(request: Request):
 
         is_auth = user_data.get("is_auth") or user_data.get("status", "approved")
 
-        unnotified_date1 = user_data.get("unnotified_date1", "")
-        unnotified_date2 = user_data.get("unnotified_date2", "")
+        memo = user_data.get("memo", "")
+
+        unnotified_date1, unnotified_date2 = purge_expired_unnotified(user_doc.reference, user_data, today)
         is_sick_leave = user_data.get("is_sick_leave", False)
 
         unnotified_count = 0
@@ -242,7 +251,8 @@ async def admin_dashboard(request: Request):
             "unnotified_date2": unnotified_date2,
             "unnotified_count": unnotified_count,
             "is_sick_leave": is_sick_leave,
-            "is_auth": is_auth
+            "is_auth": is_auth,
+            "memo": memo
         }
 
         if is_auth == 'pending':
@@ -313,6 +323,8 @@ async def admin_dashboard(request: Request):
         "total_dropout": len(dropout_list),
         "total_sick": len(sick_list),
         "total_users": len(all_users_list),
-        "total_pending": len(pending_list)
+        "total_pending": len(pending_list),
+        "memo_map": {u["uid"]: u["memo"] for u in all_users_list + pending_list},
+        "memo_max_length": MEMO_MAX_LENGTH
     }
     return templates.TemplateResponse("admin/dashboard.html", context)

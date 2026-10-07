@@ -8,7 +8,7 @@ from fastapi.templating import Jinja2Templates
 from database import get_db
 from logic import (
     check_ip, check_attendance_time, get_current_kst_time, get_client_ip,
-    DROPOUT_DAYS, WARNING_DAYS, ACTIVE_DAYS,
+    purge_expired_unnotified, DROPOUT_DAYS, WARNING_DAYS, ACTIVE_DAYS,
 )
 from dependencies import get_current_user_uid, ADMIN_UIDS
 from google.cloud.firestore_v1.base_query import FieldFilter
@@ -303,8 +303,7 @@ async def read_root(request: Request):
             is_auth = u_data.get("is_auth") or u_data.get("status", "approved")
 
             # Additional Status Fields
-            unnotified_date1 = u_data.get("unnotified_date1", "")
-            unnotified_date2 = u_data.get("unnotified_date2", "")
+            unnotified_date1, unnotified_date2 = purge_expired_unnotified(user_doc.reference, u_data, now.date())
             is_sick_leave = u_data.get("is_sick_leave", False)
 
             unnotified_count = 0
