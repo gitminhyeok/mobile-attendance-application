@@ -213,10 +213,10 @@
                             <th class="py-4 pl-4 font-bold">이름</th>
                             <th class="py-4 font-bold">기수</th>
                             <th class="py-4 font-bold">전화번호</th>
+                            <th class="py-4 font-bold">특이사항</th>
+                            <th class="py-4 font-bold text-center">최근 출석일</th>
                             <th class="py-4 font-bold text-center text-red-500">미통보 불참</th>
                             <th class="py-4 font-bold text-center text-blue-500">병결</th>
-                            <th class="py-4 font-bold text-center">최근 출석일</th>
-                            <th class="py-4 font-bold">특이사항</th>
                             <th class="py-4 font-bold text-center">저장</th>
                         </tr>
                     </thead>
@@ -247,6 +247,16 @@
                                     class="bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-lg focus:ring-black focus:border-black block w-32 p-2.5 font-mono"
                                     maxlength="13">
                             </td>
+                            <td class="py-4 pr-2">
+                                <textarea id="memo-{{ user.uid }}" rows="2" maxlength="{{ memo_max_length }}" placeholder="{{ memo_max_length }}자 이내"
+                                    class="bg-gray-50 border border-gray-200 text-gray-800 text-xs rounded-lg focus:ring-black focus:border-black block w-44 p-2 resize-none">{{ user.memo }}</textarea>
+                            </td>
+                            <td class="py-4 text-center">
+                                <span class="text-xs font-bold {{ 'text-red-500' if user.days_absent >= 14 + 2 else 'text-gray-500' }}">
+                                    {{ user.last_date }}
+                                </span>
+                                <div class="text-[9px] text-gray-400">({{ user.days_absent }} days ago)</div>
+                            </td>
                             <td class="py-4 text-center">
                                 <div class="flex flex-col gap-1 items-center">
                                     <input type="text" id="unnotified-date1-{{ user.uid }}" value="{{ user.unnotified_date1 }}" placeholder="YY-MM-DD"
@@ -260,16 +270,6 @@
                             <td class="py-4 text-center">
                                 <input type="checkbox" id="sick-{{ user.uid }}" {{ 'checked' if user.is_sick_leave else '' }}
                                     class="w-6 h-6 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 mx-auto block">
-                            </td>
-                            <td class="py-4 text-center">
-                                <span class="text-xs font-bold {{ 'text-red-500' if user.days_absent >= 14 + 2 else 'text-gray-500' }}">
-                                    {{ user.last_date }}
-                                </span>
-                                <div class="text-[9px] text-gray-400">({{ user.days_absent }} days ago)</div>
-                            </td>
-                            <td class="py-4 pr-2">
-                                <textarea id="memo-{{ user.uid }}" rows="2" maxlength="{{ memo_max_length }}" placeholder="{{ memo_max_length }}자 이내"
-                                    class="bg-gray-50 border border-gray-200 text-gray-800 text-xs rounded-lg focus:ring-black focus:border-black block w-44 p-2 resize-none">{{ user.memo }}</textarea>
                             </td>
                             <td class="py-4 text-center">
                                 <div class="flex items-center justify-center space-x-2">
@@ -382,6 +382,15 @@
                     <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">전화번호</label>
                     <input type="tel" id="edit-phone" oninput="autoFormatPhone(this)" placeholder="010-0000-0000" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-black focus:border-black font-mono text-sm">
                 </div>
+                <div>
+                    <div class="flex items-center justify-between mb-1 mx-1">
+                        <label for="edit-memo" class="block text-[10px] font-bold text-gray-400 uppercase">특이사항</label>
+                        <span id="edit-memo-count" class="text-[10px] font-mono text-gray-400">0/{{ memo_max_length }}</span>
+                    </div>
+                    <textarea id="edit-memo" rows="2" maxlength="{{ memo_max_length }}" oninput="updateMemoCount()"
+                        placeholder="{{ memo_max_length }}자 이내"
+                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-black focus:border-black text-sm resize-none"></textarea>
+                </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">미통보 불참일</label>
@@ -396,15 +405,6 @@
                             <input type="checkbox" id="edit-sick" class="w-6 h-6 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
                         </div>
                     </div>
-                </div>
-                <div>
-                    <div class="flex items-center justify-between mb-1 mx-1">
-                        <label for="edit-memo" class="block text-[10px] font-bold text-gray-400 uppercase">특이사항 메모</label>
-                        <span id="edit-memo-count" class="text-[10px] font-mono text-gray-400">0/{{ memo_max_length }}</span>
-                    </div>
-                    <textarea id="edit-memo" rows="2" maxlength="{{ memo_max_length }}" oninput="updateMemoCount()"
-                        placeholder="예: 3월까지 출장으로 불참 예정"
-                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-black focus:border-black text-sm resize-none"></textarea>
                 </div>
             </div>
 
