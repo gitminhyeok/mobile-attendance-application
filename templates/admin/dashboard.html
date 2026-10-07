@@ -216,7 +216,7 @@
                             <th class="py-4 font-bold text-center text-red-500">미통보 불참</th>
                             <th class="py-4 font-bold text-center text-blue-500">병결</th>
                             <th class="py-4 font-bold text-center">최근 출석일</th>
-                            <th class="py-4 font-bold">메모</th>
+                            <th class="py-4 font-bold">특이사항</th>
                             <th class="py-4 font-bold text-center">저장</th>
                         </tr>
                     </thead>
@@ -268,7 +268,7 @@
                                 <div class="text-[9px] text-gray-400">({{ user.days_absent }} days ago)</div>
                             </td>
                             <td class="py-4 pr-2">
-                                <textarea id="memo-{{ user.uid }}" rows="2" maxlength="{{ memo_max_length }}" placeholder="특이사항 ({{ memo_max_length }}자 이내)"
+                                <textarea id="memo-{{ user.uid }}" rows="2" maxlength="{{ memo_max_length }}" placeholder="{{ memo_max_length }}자 이내"
                                     class="bg-gray-50 border border-gray-200 text-gray-800 text-xs rounded-lg focus:ring-black focus:border-black block w-44 p-2 resize-none">{{ user.memo }}</textarea>
                             </td>
                             <td class="py-4 text-center">
