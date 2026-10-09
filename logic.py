@@ -111,30 +111,30 @@ def check_attendance_time():
     
     if weekday == 5: # Saturday
         # 13:00 기준
-        # 출석: 12:45 ~ 13:15 (전후 15분)
-        # 지각: 13:15:01 ~ 15:00 (기준 시간 2시간까지)
+        # 출석: 12:45 ~ 13:10:59
+        # 지각: 13:11 ~ 13:59:59 (기준 시간 1시간까지)
         start_attend = time(12, 45)
-        end_attend = time(13, 16)
-        end_late = time(15, 0)
-        
-        if start_attend <= current_time <= end_attend:
+        end_attend = time(13, 11)
+        end_late = time(14, 0)
+
+        if start_attend <= current_time < end_attend:
             return "open", "출석 가능"
-        elif end_attend < current_time <= end_late:
+        elif end_attend <= current_time < end_late:
             return "late", "지각"
         else:
             return "closed", "출석 시간이 아닙니다."
 
     elif weekday == 6: # Sunday
         # 16:00 기준
-        # 출석: 15:45 ~ 16:15 (전후 15분)
-        # 지각: 16:15:01 ~ 18:00 (기준 시간 2시간까지)
+        # 출석: 15:45 ~ 16:10:59
+        # 지각: 16:11 ~ 16:59:59 (기준 시간 1시간까지)
         start_attend = time(15, 45)
-        end_attend = time(16, 16)
-        end_late = time(18, 0)
+        end_attend = time(16, 11)
+        end_late = time(17, 0)
 
-        if start_attend <= current_time <= end_attend:
+        if start_attend <= current_time < end_attend:
             return "open", "출석 가능"
-        elif end_attend < current_time <= end_late:
+        elif end_attend <= current_time < end_late:
             return "late", "지각"
         else:
             return "closed", "출석 시간이 아닙니다."
