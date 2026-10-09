@@ -54,23 +54,32 @@ async def batch_update_attendance(request: Request, payload: BatchAttendanceRequ
     updated_count = 0
 
     for uid in payload.user_ids:
-        docs = (
+        # Fetch ALL docs for this user+date: duplicates would otherwise keep an
+        # old 'present' doc alive and the ranking (which counts every doc) stale.
+        existing_docs = list(
             db.collection("attendance")
             .where(filter=FieldFilter("user_id", "==", uid))
             .where(filter=FieldFilter("date", "==", payload.date))
-            .limit(1)
             .stream()
         )
-        existing_doc = next(docs, None)
 
         if payload.status == 'absent':
-            if existing_doc:
-                existing_doc.reference.delete()
+            if existing_docs:
+                for doc in existing_docs:
+                    doc.reference.delete()
                 updated_count += 1
         else:
-            if existing_doc:
-                if existing_doc.to_dict().get('status') != payload.status:
-                    existing_doc.reference.update({"status": payload.status})
+            if existing_docs:
+                changed = False
+                primary = existing_docs[0]
+                if primary.to_dict().get('status') != payload.status:
+                    primary.reference.update({"status": payload.status})
+                    changed = True
+                # Remove duplicate docs so each user has one record per date
+                for extra in existing_docs[1:]:
+                    extra.reference.delete()
+                    changed = True
+                if changed:
                     updated_count += 1
             else:
                 new_data = {
@@ -112,14 +121,18 @@ async def update_user_info(
     unnotified_date1: str = Form(""),
     unnotified_date2: str = Form(""),
     is_sick_leave: bool = Form(False),
-    memo: str = Form(None),
     admin_uid: str = Depends(require_admin),
 ):
     # CSRF check
     if request.headers.get("X-Requested-With") != "XMLHttpRequest":
         return JSONResponse(status_code=403, content={"message": "잘못된 요청입니다."})
 
-    if memo is not None and len(memo.strip()) > MEMO_MAX_LENGTH:
+    # FastAPI turns an empty Form(None) field into None, which made it impossible
+    # to clear the memo. Read the raw form to tell "sent as blank" from "not sent".
+    form = await request.form()
+    memo = str(form.get("memo", "") or "").strip() if "memo" in form else None
+
+    if memo is not None and len(memo) > MEMO_MAX_LENGTH:
         return JSONResponse(status_code=400, content={"message": f"메모는 {MEMO_MAX_LENGTH}자 이내로 입력해주세요."})
 
     db = get_db()
@@ -132,9 +145,10 @@ async def update_user_info(
         "is_sick_leave": is_sick_leave
     }
 
-    # Only touch memo when the form actually sends it (approval flow does not)
+    # Only touch memo when the form actually sends it (approval flow does not);
+    # an empty string is a valid value and clears the memo.
     if memo is not None:
-        update_data["memo"] = memo.strip()
+        update_data["memo"] = memo
 
     if is_auth:
         update_data["is_auth"] = is_auth.strip()
