@@ -9,8 +9,11 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-# Secret key for signing cookies - MUST be set in production
-SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-in-production")
+# Secret key for signing cookies. No fallback: a predictable default would let
+# anyone forge a session cookie for any uid (including admins).
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY environment variable must be set")
 COOKIE_MAX_AGE = 60 * 60 * 24 * 7  # 7 days in seconds
 
 _serializer = URLSafeTimedSerializer(SECRET_KEY)

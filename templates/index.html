@@ -572,19 +572,23 @@
 
             const tbody = document.getElementById('ranking-tbody');
             tbody.innerHTML = '';
+            // Escape user-controlled strings (e.g. nicknames) before innerHTML insertion
+            const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => (
+                {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]
+            ));
             if (data.ranking_list.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="3" class="py-12 text-center text-gray-400">이달의 데이터가 없습니다.</td></tr>`;
             } else {
                 data.ranking_list.forEach(item => {
-                    let profileImg = item.profile_image ? item.profile_image : `https://ui-avatars.com/api/?name=${item.nickname}&background=random`;
+                    let profileImg = item.profile_image ? item.profile_image : `https://ui-avatars.com/api/?name=${encodeURIComponent(item.nickname)}&background=random`;
                     const row = `
                         <tr class="group hover:bg-gray-50 transition-colors ${item.is_me ? 'bg-gray-50' : ''} animate-[fadeIn_0.3s_ease-out]">
-                            <td class="py-5 text-xltext-black text-center">${item.rank}</td>
+                            <td class="py-5 text-xltext-black text-center">${esc(item.rank)}</td>
                             <td class="py-5 pl-4">
                                 <div class="flex items-center">
-                                    <img src="${profileImg}" alt="${item.nickname}" draggable="false" oncontextmenu="return false;" class="w-10 h-10 rounded-full object-cover mr-3 border border-gray-200 shadow-sm bg-gray-100 protected-img">
+                                    <img src="${esc(profileImg)}" alt="${esc(item.nickname)}" draggable="false" oncontextmenu="return false;" class="w-10 h-10 rounded-full object-cover mr-3 border border-gray-200 shadow-sm bg-gray-100 protected-img">
                                     <div>
-                                        <span class="font-bold text-lg ${item.is_me ? 'text-magnus-red' : ''}">${item.nickname}</span>
+                                        <span class="font-bold text-lg ${item.is_me ? 'text-magnus-red' : ''}">${esc(item.nickname)}</span>
                                         ${item.is_me ? '<span class="ml-2 text-[10px] bg-black text-white px-1.5 py-0.5 rounded align-middle">ME</span>' : ''}
                                     </div>
                                 </div>

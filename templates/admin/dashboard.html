@@ -19,7 +19,7 @@
             
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {% for user in pending_list %}
-                <div onclick="openEditModal('{{ user.uid }}', '{{ user.nickname }}', '{{ user.initial_nickname }}', '{{ user.batch }}', '{{ user.phone }}', '{{ user.unnotified_date1 }}', '{{ user.unnotified_date2 }}', {{ 'true' if user.is_sick_leave else 'false' }}, '{{ user.profile_image if user.profile_image else '' }}', '{{ user.is_auth }}')" 
+                <div data-uid="{{ user.uid }}" onclick="openEditModalByUid(this.dataset.uid)"
                     class="flex items-center p-4 bg-purple-50 rounded-xl border border-purple-100 hover:bg-purple-100 cursor-pointer transition-colors shadow-sm">
                     <img src="{{ user.profile_image if user.profile_image else 'https://ui-avatars.com/api/?name=' + user.nickname + '&background=random' }}" 
                         class="w-10 h-10 rounded-full mr-3 border border-white shadow-sm object-cover">
@@ -278,7 +278,7 @@
                                             class="bg-black text-white hover:bg-gray-800 text-xs font-bold py-2 px-4 rounded-lg transition-colors shadow-sm">
                                         저장
                                     </button>
-                                    <button onclick="deleteUser('{{ user.uid }}', '{{ user.nickname }}')" 
+                                    <button data-uid="{{ user.uid }}" onclick="deleteUserByUid(this.dataset.uid)"
                                             class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete Member">
                                         <i data-lucide="trash-2" class="w-4 h-4"></i>
                                     </button>
@@ -293,7 +293,7 @@
             <!-- Mobile Card View (Shown only on mobile) -->
             <div class="md:hidden space-y-4">
                 {% for user in all_users_list %}
-                <div onclick="openEditModal('{{ user.uid }}', '{{ user.nickname }}', '{{ user.initial_nickname }}', '{{ user.batch }}', '{{ user.phone }}', '{{ user.unnotified_date1 }}', '{{ user.unnotified_date2 }}', {{ 'true' if user.is_sick_leave else 'false' }}, '{{ user.profile_image if user.profile_image else '' }}', '{{ user.is_auth }}')" 
+                <div data-uid="{{ user.uid }}" onclick="openEditModalByUid(this.dataset.uid)"
                     class="p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between active:scale-95 transition-transform cursor-pointer">
                     <div class="flex items-center">
                         <img src="{{ user.profile_image if user.profile_image else 'https://ui-avatars.com/api/?name=' + user.nickname + '&background=random' }}" 
@@ -482,17 +482,40 @@
 </div>
 
 <script>
-    // --- Data ---
+    // --- Data (values serialized with tojson: user-controlled strings must never
+    //     be dropped into JS source or HTML as-is) ---
     const ALL_USERS = [
         {% for user in all_users_list %}
         {
-            uid: "{{ user.uid }}",
-            nickname: "{{ user.nickname }}",
-            profile_image: "{{ user.profile_image if user.profile_image else '' }}",
-            batch: "{{ user.batch }}"
+            uid: {{ (user.uid or '') | tojson }},
+            nickname: {{ user.nickname | tojson }},
+            profile_image: {{ (user.profile_image or '') | tojson }},
+            batch: {{ (user.batch or '') | tojson }}
         },
         {% endfor %}
     ];
+    // Full edit-modal data for approved + pending users, keyed by uid
+    const EDIT_USERS = {
+        {% for user in all_users_list + pending_list %}
+        {{ (user.uid or '') | tojson }}: {
+            nickname: {{ user.nickname | tojson }},
+            initial_nickname: {{ user.initial_nickname | tojson }},
+            batch: {{ (user.batch or '') | tojson }},
+            phone: {{ (user.phone or '') | tojson }},
+            unnotified_date1: {{ (user.unnotified_date1 or '') | tojson }},
+            unnotified_date2: {{ (user.unnotified_date2 or '') | tojson }},
+            is_sick_leave: {{ user.is_sick_leave | tojson }},
+            profile_image: {{ (user.profile_image or '') | tojson }},
+            is_auth: {{ (user.is_auth or 'approved') | tojson }}
+        },
+        {% endfor %}
+    };
+    // Escape a string for safe insertion into innerHTML / HTML attributes
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
+            {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]
+        ));
+    }
     const USER_MEMOS = {{ memo_map | tojson }};
     const MEMO_MAX_LENGTH = {{ memo_max_length }};
 
@@ -690,12 +713,19 @@
     }
 
     // --- Mobile Edit Modal Logic ---
-    function openEditModal(uid, nickname, initialNickname, batch, phone, date1, date2, isSick, profileImg, isAuth) {
+    function openEditModalByUid(uid) {
+        const u = EDIT_USERS[uid];
+        if (!u) return;
+        const nickname = u.nickname, initialNickname = u.initial_nickname,
+              batch = u.batch, phone = u.phone,
+              date1 = u.unnotified_date1, date2 = u.unnotified_date2,
+              isSick = u.is_sick_leave, profileImg = u.profile_image, isAuth = u.is_auth;
+
         document.getElementById('edit-uid').value = uid;
         const nickInput = document.getElementById('edit-nickname-field');
         nickInput.value = nickname;
         nickInput.placeholder = initialNickname;
-        
+
         document.getElementById('edit-initial-nickname').value = initialNickname;
         document.getElementById('edit-batch').value = batch && batch !== 'None' ? batch : '';
         document.getElementById('edit-phone').value = phone && phone !== 'None' ? phone : '';
@@ -718,13 +748,13 @@
         }
         
         // Profile Display (Horizontal)
-        const imgUrl = profileImg || `https://ui-avatars.com/api/?name=${nickname}&background=random`;
+        const imgUrl = profileImg || `https://ui-avatars.com/api/?name=${encodeURIComponent(nickname)}&background=random`;
         document.getElementById('edit-modal-profile').innerHTML = `
-            <img src="${imgUrl}" class="w-16 h-16 rounded-full border-2 border-white shadow-md object-cover bg-gray-200 shrink-0">
+            <img src="${esc(imgUrl)}" class="w-16 h-16 rounded-full border-2 border-white shadow-md object-cover bg-gray-200 shrink-0">
             <div class="flex flex-col">
-                <h3 class="text-xl font-black text-gray-800 leading-tight">${nickname}</h3>
-                <p class="text-xs text-gray-400 font-mono">#${uid}</p>
-                <span class="text-[10px] uppercase font-bold ${isAuth === 'pending' ? 'text-purple-600' : 'text-green-600'}">${isAuth || 'APPROVED'}</span>
+                <h3 class="text-xl font-black text-gray-800 leading-tight">${esc(nickname)}</h3>
+                <p class="text-xs text-gray-400 font-mono">#${esc(uid)}</p>
+                <span class="text-[10px] uppercase font-bold ${isAuth === 'pending' ? 'text-purple-600' : 'text-green-600'}">${esc(isAuth || 'APPROVED')}</span>
             </div>
         `;
         
@@ -769,6 +799,11 @@
         const uid = document.getElementById('edit-uid').value;
         const nickname = document.getElementById('edit-nickname-field').value;
         deleteUser(uid, nickname);
+    }
+
+    function deleteUserByUid(uid) {
+        const u = EDIT_USERS[uid];
+        deleteUser(uid, u ? u.nickname : uid);
     }
 
     async function deleteUser(uid, nickname) {
@@ -968,13 +1003,13 @@
             else if (currentStatus === 'late') badge = '<span class="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-[10px] font-bold rounded uppercase">Late</span>';
             
             const item = `
-                <label class="flex items-center p-3 hover:bg-gray-50 rounded-lg cursor-pointer border-b border-gray-50 transition member-item" data-name="${user.nickname.toLowerCase()}">
-                    <input type="checkbox" value="${user.uid}" class="batch-checkbox w-5 h-5 text-black border-gray-300 rounded focus:ring-black mr-4">
-                    <img src="${user.profile_image || ('https://ui-avatars.com/api/?name='+user.nickname)}" class="w-8 h-8 rounded-full bg-gray-200 mr-3">
+                <label class="flex items-center p-3 hover:bg-gray-50 rounded-lg cursor-pointer border-b border-gray-50 transition member-item" data-name="${esc(user.nickname.toLowerCase())}">
+                    <input type="checkbox" value="${esc(user.uid)}" class="batch-checkbox w-5 h-5 text-black border-gray-300 rounded focus:ring-black mr-4">
+                    <img src="${esc(user.profile_image || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(user.nickname)))}" class="w-8 h-8 rounded-full bg-gray-200 mr-3">
                     <div class="flex-1">
-                        <span class="font-bold text-gray-800">${user.nickname}</span>
+                        <span class="font-bold text-gray-800">${esc(user.nickname)}</span>
                         ${badge}
-                        <span class="text-[10px] text-gray-400 block">${user.batch || '-'}</span>
+                        <span class="text-[10px] text-gray-400 block">${esc(user.batch || '-')}</span>
                     </div>
                 </label>
             `;
