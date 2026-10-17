@@ -145,6 +145,7 @@ async def kakao_callback(request: Request, code: str, response: Response, state:
             # If user was 'withdrawn', set to 'pending' to require re-approval
             if user_data.get("is_auth") == "withdrawn":
                 update_data["is_auth"] = "pending"
+                update_data["withdrawn_at"] = firestore.DELETE_FIELD
 
             user_ref.update(update_data)
 

@@ -105,7 +105,8 @@ async def delete_user(request: Request, uid: str = Form(...), admin_uid: str = D
         return JSONResponse(status_code=500, content={"message": "Database error"})
 
     user_ref = db.collection("users").document(uid)
-    user_ref.update({"is_auth": "withdrawn"})
+    # withdrawn_at starts the 1-year retention clock for phone/memo purging
+    user_ref.update({"is_auth": "withdrawn", "withdrawn_at": firestore.SERVER_TIMESTAMP})
 
     return JSONResponse(status_code=200, content={"message": "User moved to withdrawn list."})
 

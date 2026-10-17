@@ -1,9 +1,12 @@
 import logging
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta, timezone
 import os
 from fastapi import FastAPI, Request, HTTPException, Header
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
+from google.cloud.firestore_v1.base_query import FieldFilter
+from firebase_admin import firestore
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -71,7 +74,37 @@ async def favicon():
     return JSONResponse(status_code=404, content={"message": "Favicon not found"})
 
 
-# Vercel Cron job endpoint
+# Personal data of withdrawn members is purged after this retention period
+WITHDRAWN_RETENTION_DAYS = 365
+
+
+def purge_withdrawn_personal_data(db) -> dict:
+    """Clear phone/memo of members withdrawn more than the retention period ago.
+    Withdrawn docs without a withdrawn_at (left over from before the field
+    existed) get stamped now, so their clock starts today."""
+    cutoff = datetime.now(timezone.utc) - timedelta(days=WITHDRAWN_RETENTION_DAYS)
+    stamped = 0
+    purged = 0
+
+    docs = (
+        db.collection("users")
+        .where(filter=FieldFilter("is_auth", "==", "withdrawn"))
+        .stream()
+    )
+    for doc in docs:
+        data = doc.to_dict()
+        withdrawn_at = data.get("withdrawn_at")
+        if withdrawn_at is None:
+            doc.reference.update({"withdrawn_at": firestore.SERVER_TIMESTAMP})
+            stamped += 1
+        elif withdrawn_at < cutoff and (data.get("phone") or data.get("memo")):
+            doc.reference.update({"phone": "", "memo": ""})
+            purged += 1
+
+    return {"stamped": stamped, "purged": purged}
+
+
+# Vercel Cron job endpoint (daily): server warmup + data retention purge
 @app.get("/api/cron")
 async def run_cron_job(authorization: str = Header(None)):
     expected_secret = os.getenv("CRON_SECRET")
@@ -79,13 +112,23 @@ async def run_cron_job(authorization: str = Header(None)):
     if not expected_secret or authorization != f"Bearer {expected_secret}":
         logger.warning("Unauthorized cron attempt")
         raise HTTPException(status_code=401, detail="Unauthorized")
-    
+
     db = get_db()
-    logger.info("Cron job executed. Server is warmed up.")
+    retention = {"stamped": 0, "purged": 0}
+    if db:
+        try:
+            retention = purge_withdrawn_personal_data(db)
+        except Exception:
+            logger.exception("Retention purge failed")
+
+    logger.info(
+        f"Cron job executed. Retention: {retention['stamped']} stamped, {retention['purged']} purged."
+    )
     return {
         "ok": True,
         "message": "Server warmed up successfuly",
-        "database": "connected" if db else "disconnected"
+        "database": "connected" if db else "disconnected",
+        "retention": retention
     }
 
 
