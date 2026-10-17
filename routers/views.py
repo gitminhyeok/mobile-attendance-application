@@ -1,14 +1,15 @@
 import os
 import logging
 import calendar
-from datetime import datetime, timedelta, time
-from fastapi import APIRouter, Request, HTTPException, Depends
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from datetime import datetime
+from fastapi import APIRouter, Request, Depends
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from database import get_db
 from logic import (
     check_ip, check_attendance_time, get_current_kst_time, get_client_ip,
-    purge_expired_unnotified, DROPOUT_DAYS, WARNING_DAYS, ACTIVE_DAYS,
+    purge_expired_unnotified, count_valid_class_days, member_status,
+    DROPOUT_DAYS, WARNING_DAYS, ACTIVE_DAYS,
 )
 from dependencies import get_current_user_uid, require_approved, ADMIN_UIDS
 from google.cloud.firestore_v1.base_query import FieldFilter
@@ -38,45 +39,42 @@ def get_ranking_data(db, target_date, valid_days_count, uid):
         .stream()
     )
 
-    user_stats = {}
+    counts = {}
     for doc in docs:
         data = doc.to_dict()
         # Only count if status is 'present' (exclude 'late')
         if data.get('status') == 'present':
-            u_id = data['user_id']
-            if u_id not in user_stats:
-                user_stats[u_id] = {'count': 0}
-            user_stats[u_id]['count'] += 1
+            counts[data['user_id']] = counts.get(data['user_id'], 0) + 1
 
-    sorted_stats = sorted(user_stats.items(), key=lambda x: x[1]['count'], reverse=True)
+    if not counts:
+        return ranking_list
+
+    # Batch-fetch user docs (one round trip instead of one per member)
+    refs = [db.collection("users").document(u_id) for u_id in counts]
+    users = {snap.id: snap.to_dict() for snap in db.get_all(refs) if snap.exists}
+
+    # Filter non-approved members BEFORE assigning ranks so the visible
+    # numbering has no gaps
+    visible = [
+        (u_id, count) for u_id, count in counts.items()
+        if u_id in users and member_status(users[u_id]) == "approved"
+    ]
+    visible.sort(key=lambda item: item[1], reverse=True)
 
     current_rank = 0
-    last_count = -1
-
-    for u_id, stat in sorted_stats:
-        count = stat['count']
+    last_count = None
+    for u_id, count in visible:
         if count != last_count:
             current_rank += 1
         last_count = count
 
-        u_doc = db.collection("users").document(u_id).get()
-        u_data = u_doc.to_dict() if u_doc.exists else {}
-
-        # Skip if user is withdrawn or not approved
-        if u_data.get("is_auth") != "approved":
-            continue
-
-        u_nick = u_data.get("nickname", "Unknown")
-        u_profile = u_data.get("profile_image", "")
-
-        rate = int((stat['count'] / valid_days_count) * 100)
-
+        u_data = users[u_id]
         ranking_list.append({
             "rank": current_rank,
-            "nickname": u_nick,
-            "profile_image": u_profile,
+            "nickname": u_data.get("nickname", "Unknown"),
+            "profile_image": u_data.get("profile_image", ""),
             "count": count,
-            "rate": rate,
+            "rate": int((count / valid_days_count) * 100),
             "is_me": (u_id == uid)
         })
 
@@ -92,31 +90,8 @@ async def get_ranking_api(request: Request, year: int, month: int, uid: str = De
     except ValueError:
         return JSONResponse(status_code=400, content={"message": "Invalid date"})
 
-    # Valid Days Calculation
     now = get_current_kst_time()
-    now_naive = now.replace(tzinfo=None)
-
-    valid_days_count = 0
-
-    if target_date.strftime("%Y-%m") == now_naive.strftime("%Y-%m"):
-        check_range = range(1, now_naive.day + 1)
-        check_year, check_month = now_naive.year, now_naive.month
-    elif target_date < now_naive.replace(day=1, hour=0, minute=0, second=0, microsecond=0):
-        last_day = calendar.monthrange(target_date.year, target_date.month)[1]
-        check_range = range(1, last_day + 1)
-        check_year, check_month = target_date.year, target_date.month
-    else:
-        check_range = []
-        check_year, check_month = target_date.year, target_date.month
-
-    for day in check_range:
-        d = datetime(check_year, check_month, day)
-        if d.weekday() in [5, 6]:
-            if d.date() == now.date():
-                if d.weekday() == 5 and now.time() < time(12, 45): continue
-                if d.weekday() == 6 and now.time() < time(15, 45): continue
-            valid_days_count += 1
-    if valid_days_count == 0: valid_days_count = 1
+    valid_days_count = count_valid_class_days(year, month, now)
 
     data = get_ranking_data(db, target_date, valid_days_count, uid)
 
@@ -127,6 +102,55 @@ async def get_ranking_api(request: Request, year: int, month: int, uid: str = De
         "month": month,
         "is_current_month": (target_date.strftime("%Y-%m") == now.strftime("%Y-%m"))
     })
+
+
+def compute_longest_weekly_streak(all_dates):
+    """Longest run of consecutive ISO weeks with at least one attendance.
+    `all_dates` must be ascending 'YYYY-MM-DD' strings.
+    Returns (streak_weeks, last_date_of_best_run)."""
+    if not all_dates:
+        return 0, ""
+
+    attended_weeks = sorted({datetime.strptime(d, "%Y-%m-%d").isocalendar()[:2] for d in all_dates})
+
+    max_streak = 1
+    current_streak = 1
+    streak_end_date = all_dates[0]
+
+    for i in range(1, len(attended_weeks)):
+        prev_w = attended_weeks[i - 1]
+        curr_w = attended_weeks[i]
+
+        d1 = datetime.fromisocalendar(prev_w[0], prev_w[1], 1)
+        d2 = datetime.fromisocalendar(curr_w[0], curr_w[1], 1)
+
+        current_streak = current_streak + 1 if (d2 - d1).days == 7 else 1
+
+        if current_streak >= max_streak:
+            max_streak = current_streak
+            week_dates = [d for d in all_dates if datetime.strptime(d, "%Y-%m-%d").isocalendar()[:2] == curr_w]
+            if week_dates:
+                streak_end_date = week_dates[-1]
+
+    return max_streak, streak_end_date
+
+
+def build_status_message(is_sick_leave, days_absent, unnotified_count, current_month_count):
+    """Priority-ordered home screen status line. Returns (message, css_color)."""
+    if is_sick_leave:
+        return "병결 중이시네요, 회복 후 다시 만나요 💊", "text-blue-600"
+    if days_absent == -1:
+        return "첫 출석을 기다리고 있어요 🌱", "text-gray-500"
+    if days_absent >= DROPOUT_DAYS or unnotified_count >= 2:
+        reason = "미통보 불참 누적" if unnotified_count >= 2 else "장기 결석"
+        return f"제적 대상입니다 🚨 ({reason})", "text-red-600"
+    if days_absent >= WARNING_DAYS:
+        return "벌써 2주째 참여하지 않았어요 ⚠️", "text-yellow-600"
+    if days_absent < ACTIVE_DAYS:
+        if current_month_count > 1:
+            return "훌륭해요, 연속으로 참석 중이예요 🔥", "text-blue-600"
+        return "이번 주에도 훈련에 참여했어요 👍", "text-black"
+    return "어서오세요! 오늘도 힘내세요 💪", "text-gray-500"
 
 
 def get_calendar_data(db, uid, target_date):
@@ -192,26 +216,8 @@ async def get_record_calendar_api(request: Request, year: int, month: int, uid: 
     except ValueError:
         return JSONResponse(status_code=400, content={"message": "Invalid date"})
 
-    valid_days_count = 0
-    last_day = calendar.monthrange(year, month)[1]
     now = get_current_kst_time()
-    now_naive = now.replace(tzinfo=None)
-
-    check_range = range(1, last_day + 1)
-
-    if target_date.strftime("%Y-%m") == now.strftime("%Y-%m"):
-        check_range = range(1, now.day + 1)
-    elif target_date > now_naive:
-        check_range = []
-    else:
-        check_range = range(1, last_day + 1)
-
-    for day in check_range:
-        d = datetime(year, month, day)
-        if d.weekday() in [5, 6]:
-            valid_days_count += 1
-
-    if valid_days_count == 0: valid_days_count = 1
+    valid_days_count = count_valid_class_days(year, month, now)
 
     calendar_grid = get_calendar_data(db, uid, target_date)
 
@@ -258,15 +264,7 @@ async def read_root(request: Request):
     today_str = now.strftime("%Y-%m-%d")
 
     # Calculate Valid Class Days
-    valid_days_count = 0
-    for day in range(1, now.day + 1):
-        d = datetime(now.year, now.month, day)
-        if d.weekday() in [5, 6]:
-            if d.date() == now.date():
-                if d.weekday() == 5 and now.time() < time(12, 45): continue
-                if d.weekday() == 6 and now.time() < time(15, 45): continue
-            valid_days_count += 1
-    if valid_days_count == 0: valid_days_count = 1
+    valid_days_count = count_valid_class_days(now.year, now.month, now)
 
     # 3. User Specific Data (Record)
     my_record = {
@@ -295,7 +293,7 @@ async def read_root(request: Request):
         if user_doc.exists:
             u_data = user_doc.to_dict()
             nickname = u_data.get("nickname")
-            is_auth = u_data.get("is_auth") or u_data.get("status", "approved")
+            is_auth = member_status(u_data)
 
             # Additional Status Fields
             unnotified_date1, unnotified_date2 = purge_expired_unnotified(user_doc.reference, u_data, now.date())
@@ -332,36 +330,7 @@ async def read_root(request: Request):
                 if date_str.startswith(current_month_prefix):
                     my_record["current_month_count"] += 1
 
-            # Calculate Longest Weekly Streak
-            max_streak = 0
-            current_streak = 0
-            streak_end_date = ""
-
-            if all_dates:
-                attended_weeks = sorted(list(set([datetime.strptime(d, "%Y-%m-%d").isocalendar()[:2] for d in all_dates])))
-
-                if attended_weeks:
-                    current_streak = 1
-                    max_streak = 1
-                    streak_end_date = all_dates[0]
-
-                    for i in range(1, len(attended_weeks)):
-                        prev_w = attended_weeks[i-1]
-                        curr_w = attended_weeks[i]
-
-                        d1 = datetime.fromisocalendar(prev_w[0], prev_w[1], 1)
-                        d2 = datetime.fromisocalendar(curr_w[0], curr_w[1], 1)
-
-                        if (d2 - d1).days == 7:
-                            current_streak += 1
-                        else:
-                            current_streak = 1
-
-                        if current_streak >= max_streak:
-                            max_streak = current_streak
-                            week_dates = [d for d in all_dates if datetime.strptime(d, "%Y-%m-%d").isocalendar()[:2] == curr_w]
-                            if week_dates:
-                                streak_end_date = week_dates[-1]
+            max_streak, streak_end_date = compute_longest_weekly_streak(all_dates)
 
             my_record["attendance_rate"] = int((my_record["current_month_count"] / valid_days_count) * 100)
             my_record["current_streak"] = max_streak
@@ -395,30 +364,8 @@ async def read_root(request: Request):
             last_date = datetime.strptime(last_date_str, "%Y-%m-%d").date()
             days_absent = (now.date() - last_date).days
 
-        # Status Priority Logic (using named constants)
-        if is_sick_leave:
-            status_message = "병결 중이시네요, 회복 후 다시 만나요 💊"
-            status_color = "text-blue-600"
-        elif days_absent == -1:
-            status_message = "첫 출석을 기다리고 있어요 🌱"
-            status_color = "text-gray-500"
-        elif days_absent >= DROPOUT_DAYS or unnotified_count >= 2:
-            reason = "미통보 불참 누적" if unnotified_count >= 2 else "장기 결석"
-            status_message = f"제적 대상입니다 🚨 ({reason})"
-            status_color = "text-red-600"
-        elif days_absent >= WARNING_DAYS:
-            status_message = "벌써 2주째 참여하지 않았어요 ⚠️"
-            status_color = "text-yellow-600"
-        elif days_absent < ACTIVE_DAYS:
-            if my_record["current_month_count"] > 1:
-                status_message = "훌륭해요, 연속으로 참석 중이예요 🔥"
-                status_color = "text-blue-600"
-            else:
-                status_message = "이번 주에도 훈련에 참여했어요 👍"
-                status_color = "text-black"
-        else:
-            status_message = "어서오세요! 오늘도 힘내세요 💪"
-            status_color = "text-gray-500"
+        status_message, status_color = build_status_message(
+            is_sick_leave, days_absent, unnotified_count, my_record["current_month_count"])
 
     # 5. Ranking Data (Initial Load using helper)
     ranking_list = []

@@ -1,6 +1,6 @@
 import os
 import calendar
-from datetime import datetime, time, timedelta
+from datetime import datetime, time
 import pytz
 from dotenv import load_dotenv
 
@@ -21,6 +21,20 @@ UNNOTIFIED_EXPIRY_MONTHS = 3
 
 # Max length of the admin memo on a user
 MEMO_MAX_LENGTH = 50
+
+# Weekend class schedule (KST): weekday -> (attend_start, late_start, close)
+# present: attend_start <= t < late_start, late: late_start <= t < close
+CLASS_SCHEDULE = {
+    5: (time(12, 45), time(13, 11), time(14, 0)),   # Saturday, 13:00 class
+    6: (time(15, 45), time(16, 11), time(17, 0)),   # Sunday, 16:00 class
+}
+
+
+def member_status(user_data) -> str:
+    """Membership state with the app-wide fallback: legacy docs without
+    is_auth fall back to status, defaulting to approved."""
+    data = user_data or {}
+    return data.get("is_auth") or data.get("status", "approved")
 
 
 def parse_unnotified_date(date_str: str):
@@ -101,42 +115,48 @@ def check_attendance_time():
         message (str): Description
     """
     now = get_current_kst_time()
-    weekday = now.weekday() # Monday=0, Sunday=6
-    
-    # Saturday = 5, Sunday = 6
-    if weekday not in [5, 6]:
+    schedule = CLASS_SCHEDULE.get(now.weekday())  # Monday=0, Sunday=6
+
+    if not schedule:
         return "closed", "오늘은 훈련일이 아닙니다."
 
+    attend_start, late_start, close = schedule
     current_time = now.time()
-    
-    if weekday == 5: # Saturday
-        # 13:00 기준
-        # 출석: 12:45 ~ 13:10:59
-        # 지각: 13:11 ~ 13:59:59 (기준 시간 1시간까지)
-        start_attend = time(12, 45)
-        end_attend = time(13, 11)
-        end_late = time(14, 0)
 
-        if start_attend <= current_time < end_attend:
-            return "open", "출석 가능"
-        elif end_attend <= current_time < end_late:
-            return "late", "지각"
-        else:
-            return "closed", "출석 시간이 아닙니다."
+    if attend_start <= current_time < late_start:
+        return "open", "출석 가능"
+    if late_start <= current_time < close:
+        return "late", "지각"
+    return "closed", "출석 시간이 아닙니다."
 
-    elif weekday == 6: # Sunday
-        # 16:00 기준
-        # 출석: 15:45 ~ 16:10:59
-        # 지각: 16:11 ~ 16:59:59 (기준 시간 1시간까지)
-        start_attend = time(15, 45)
-        end_attend = time(16, 11)
-        end_late = time(17, 0)
 
-        if start_attend <= current_time < end_attend:
-            return "open", "출석 가능"
-        elif end_attend <= current_time < end_late:
-            return "late", "지각"
-        else:
-            return "closed", "출석 시간이 아닙니다."
-            
-    return "closed", "오류 발생"
+def count_valid_class_days(year: int, month: int, now=None) -> int:
+    """Number of weekend class days of the month that count toward the
+    attendance-rate denominator, as of `now` (KST).
+
+    Past months count every weekend day, future months none, and the current
+    month counts up to today -- excluding today's class while it has not
+    started yet. Returns at least 1 so callers can divide safely.
+    """
+    now = now or get_current_kst_time()
+    target = (year, month)
+    current = (now.year, now.month)
+
+    if target == current:
+        days = range(1, now.day + 1)
+    elif target < current:
+        days = range(1, calendar.monthrange(year, month)[1] + 1)
+    else:
+        days = range(0)
+
+    count = 0
+    for day in days:
+        d = datetime(year, month, day)
+        schedule = CLASS_SCHEDULE.get(d.weekday())
+        if not schedule:
+            continue
+        if d.date() == now.date() and now.time() < schedule[0]:
+            continue  # today's class has not started yet
+        count += 1
+
+    return max(count, 1)

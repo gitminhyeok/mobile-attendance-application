@@ -1,14 +1,16 @@
-import os
 import re
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List
-from fastapi import APIRouter, Request, HTTPException, Depends, Form
+from fastapi import APIRouter, Request, Depends, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from database import get_db
-from logic import get_current_kst_time, purge_expired_unnotified, DROPOUT_DAYS, WARNING_DAYS, MEMO_MAX_LENGTH
+from logic import (
+    get_current_kst_time, purge_expired_unnotified, member_status,
+    DROPOUT_DAYS, WARNING_DAYS, MEMO_MAX_LENGTH,
+)
 from dependencies import get_current_user_uid, require_admin, ADMIN_UIDS
 from google.cloud.firestore_v1.base_query import FieldFilter
 from firebase_admin import firestore
@@ -23,6 +25,19 @@ class BatchAttendanceRequest(BaseModel):
     date: str
     user_ids: List[str]
     status: str  # 'present', 'late', 'absent'
+
+
+def get_last_attendance_map(db) -> dict:
+    """Latest attendance date per user, in a single projected query instead
+    of one Firestore round trip per member."""
+    latest = {}
+    docs = db.collection("attendance").select(["user_id", "date"]).stream()
+    for doc in docs:
+        data = doc.to_dict()
+        user_id, date_str = data.get("user_id"), data.get("date")
+        if user_id and date_str and date_str > latest.get(user_id, ""):
+            latest[user_id] = date_str
+    return latest
 
 
 @router.get("/admin/api/attendance/daily")
@@ -214,6 +229,8 @@ async def admin_dashboard(request: Request):
     now = get_current_kst_time()
     today = now.date()
 
+    last_attendance = get_last_attendance_map(db)
+
     for user_doc in users_ref:
         user_data = user_doc.to_dict()
         user_id = user_data.get("uid")
@@ -223,7 +240,7 @@ async def admin_dashboard(request: Request):
         batch = user_data.get("batch", "")
         profile_image = user_data.get("profile_image", "")
 
-        is_auth = user_data.get("is_auth") or user_data.get("status", "approved")
+        is_auth = member_status(user_data)
 
         memo = user_data.get("memo", "")
 
@@ -234,22 +251,9 @@ async def admin_dashboard(request: Request):
         if unnotified_date1: unnotified_count += 1
         if unnotified_date2: unnotified_count += 1
 
-        # Get last attendance
-        last_attend_doc = (
-            db.collection("attendance")
-            .where(filter=FieldFilter("user_id", "==", user_id))
-            .order_by("date", direction="DESCENDING")
-            .limit(1)
-            .stream()
-        )
-
-        last_date_str = "Never"
+        last_date_str = last_attendance.get(user_id, "Never")
         days_absent = -1
-
-        last_attend_list = list(last_attend_doc)
-        if last_attend_list:
-            data = last_attend_list[0].to_dict()
-            last_date_str = data['date']
+        if user_id in last_attendance:
             last_date = datetime.strptime(last_date_str, "%Y-%m-%d").date()
             days_absent = (today - last_date).days
 
@@ -340,6 +344,7 @@ async def admin_dashboard(request: Request):
         "total_users": len(all_users_list),
         "total_pending": len(pending_list),
         "memo_map": {u["uid"]: u["memo"] for u in all_users_list + pending_list},
-        "memo_max_length": MEMO_MAX_LENGTH
+        "memo_max_length": MEMO_MAX_LENGTH,
+        "warning_days": WARNING_DAYS
     }
     return templates.TemplateResponse(request, "admin/dashboard.html", context)

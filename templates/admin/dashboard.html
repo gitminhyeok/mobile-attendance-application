@@ -252,7 +252,7 @@
                                     class="{{ 'bg-amber-50 border-amber-200' if user.memo else 'bg-gray-50 border-gray-200' }} border text-gray-800 text-xs rounded-lg focus:ring-black focus:border-black block w-44 p-2 resize-none">{{ user.memo }}</textarea>
                             </td>
                             <td class="py-4 text-center">
-                                <span class="text-xs font-bold {{ 'text-red-500' if user.days_absent >= 14 + 2 else 'text-gray-500' }}">
+                                <span class="text-xs font-bold {{ 'text-red-500' if user.days_absent >= warning_days else 'text-gray-500' }}">
                                     {{ user.last_date }}
                                 </span>
                                 <div class="text-[9px] text-gray-400">({{ user.days_absent }} days ago)</div>
@@ -304,7 +304,7 @@
                         </div>
                     </div>
                     <div class="text-right">
-                        <span class="text-[10px] font-bold block uppercase {{ 'text-red-500' if user.days_absent >= 14 + 2 else 'text-gray-400' }}">
+                        <span class="text-[10px] font-bold block uppercase {{ 'text-red-500' if user.days_absent >= warning_days else 'text-gray-400' }}">
                             {{ user.last_date }}
                         </span>
                         <div class="flex items-center justify-end mt-1 gap-1">
@@ -663,6 +663,28 @@
         document.body.removeChild(textArea);
     }
 
+    // Shared POST helper for the save/approve/delete actions:
+    // alert + reload on success, error message otherwise
+    async function postForm(url, formData, successMessage) {
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            });
+            const data = await response.json();
+            if (response.ok) {
+                alert(successMessage);
+                window.location.reload();
+            } else {
+                alert("❌ 오류: " + data.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert("네트워크 오류가 발생했습니다.");
+        }
+    }
+
     async function updateUserInfo(uid) {
         const nicknameInput = document.getElementById(`nickname-${uid}`);
         const phoneInput = document.getElementById(`phone-${uid}`);
@@ -692,24 +714,7 @@
         formData.append('is_sick_leave', isSickLeave);
         formData.append('is_auth', isAuth); // Send is_auth
 
-        try {
-            const response = await fetch('/admin/api/user/update', {
-                method: 'POST',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                body: formData
-            });
-            const data = await response.json();
-            
-            if (response.ok) {
-                alert(`✅ 저장되었습니다.`);
-                window.location.reload(); 
-            } else {
-                alert("❌ 오류: " + data.message);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert("네트워크 오류가 발생했습니다.");
-        }
+        await postForm('/admin/api/user/update', formData, '✅ 저장되었습니다.');
     }
 
     // --- Mobile Edit Modal Logic ---
@@ -774,16 +779,7 @@
         formData.append('phone', document.getElementById('edit-phone').value);
         formData.append('batch', document.getElementById('edit-batch').value);
 
-        try {
-            const response = await fetch('/admin/api/user/update', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: formData });
-            const data = await response.json();
-            if (response.ok) {
-                alert(`✅ 가입이 승인되었습니다!`);
-                window.location.reload(); 
-            } else {
-                alert("❌ 오류: " + data.message);
-            }
-        } catch (error) { console.error(error); alert("Network error."); }
+        await postForm('/admin/api/user/update', formData, '✅ 가입이 승인되었습니다!');
     }
 
     function updateMemoCount() {
@@ -812,24 +808,7 @@
         const formData = new FormData();
         formData.append('uid', uid);
 
-        try {
-            const response = await fetch('/admin/api/user/delete', {
-                method: 'POST',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                body: formData
-            });
-            const data = await response.json();
-            
-            if (response.ok) {
-                alert(`🗑️ 삭제되었습니다: ${data.message}`);
-                window.location.reload(); 
-            } else {
-                alert("❌ 오류: " + data.message);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert("네트워크 오류가 발생했습니다.");
-        }
+        await postForm('/admin/api/user/delete', formData, '🗑️ 삭제되었습니다.');
     }
 
     async function saveIndividualEdit() {
@@ -854,24 +833,7 @@
         formData.append('is_auth', isAuth); // Send is_auth
         formData.append('memo', memo);
 
-        try {
-            const response = await fetch('/admin/api/user/update', {
-                method: 'POST',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                body: formData
-            });
-            const data = await response.json();
-            
-            if (response.ok) {
-                alert(`✅ 저장되었습니다.`);
-                window.location.reload(); 
-            } else {
-                alert("❌ 오류: " + data.message);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert("네트워크 오류가 발생했습니다.");
-        }
+        await postForm('/admin/api/user/update', formData, '✅ 저장되었습니다.');
     }
 
     // --- Calendar Logic ---
