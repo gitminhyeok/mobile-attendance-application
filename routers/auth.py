@@ -1,5 +1,6 @@
 import os
 import logging
+import secrets
 import httpx
 from fastapi import APIRouter, Request, Response, HTTPException
 from fastapi.responses import RedirectResponse
@@ -31,18 +32,36 @@ def login_kakao(request: Request):
         logger.error("Kakao Client ID is missing or default in .env")
         raise HTTPException(status_code=500, detail="Server Configuration Error: Kakao Client ID missing.")
 
-    url = f"https://kauth.kakao.com/oauth/authorize?client_id={client_id}&redirect_uri={redirect_uri}&response_type=code"
-    return RedirectResponse(url)
+    # CSRF protection for the OAuth flow: random state, echoed back by Kakao
+    # and checked against this short-lived cookie in the callback
+    state = secrets.token_urlsafe(16)
+    url = f"https://kauth.kakao.com/oauth/authorize?client_id={client_id}&redirect_uri={redirect_uri}&response_type=code&state={state}"
+    response = RedirectResponse(url)
+    response.set_cookie(
+        key="oauth_state",
+        value=state,
+        httponly=True,
+        max_age=600,
+        samesite="lax",
+        secure=True,
+    )
+    return response
 
 
 @router.get("/auth/kakao/callback")
 @limiter.limit("10/minute")
-async def kakao_callback(request: Request, code: str, response: Response):
+async def kakao_callback(request: Request, code: str, response: Response, state: str = None):
     client_id = os.getenv("KAKAO_CLIENT_ID")
     redirect_uri = os.getenv("KAKAO_REDIRECT_URI")
 
     if not code:
         raise HTTPException(status_code=400, detail="Code not found")
+
+    # Verify OAuth state against the cookie set when the flow started
+    expected_state = request.cookies.get("oauth_state")
+    if not expected_state or not state or not secrets.compare_digest(state, expected_state):
+        logger.warning("OAuth state mismatch on Kakao callback")
+        raise HTTPException(status_code=400, detail="잘못된 로그인 요청입니다. 다시 시도해주세요.")
 
     # 1. Get Access Token
     token_url = "https://kauth.kakao.com/oauth/token"
@@ -66,7 +85,7 @@ async def kakao_callback(request: Request, code: str, response: Response):
         access_token = token_json.get("access_token")
     except httpx.HTTPError as e:
         logger.exception(f"HTTP error during token exchange: {e}")
-        raise HTTPException(status_code=400, detail=f"Failed to get access token: {str(e)}")
+        raise HTTPException(status_code=400, detail="카카오 로그인에 실패했습니다. 다시 시도해주세요.")
 
     # 2. Get User Info
     user_url = "https://kapi.kakao.com/v2/user/me"
@@ -79,7 +98,7 @@ async def kakao_callback(request: Request, code: str, response: Response):
         user_info = user_res.json()
     except httpx.HTTPError as e:
         logger.exception(f"Failed to get user info: {e}")
-        raise HTTPException(status_code=400, detail=f"Failed to get user info: {str(e)}")
+        raise HTTPException(status_code=400, detail="카카오 로그인에 실패했습니다. 다시 시도해주세요.")
 
     # 3. Process User Data
     kakao_uid = str(user_info.get("id"))
@@ -138,7 +157,9 @@ async def kakao_callback(request: Request, code: str, response: Response):
         httponly=True,
         max_age=COOKIE_MAX_AGE,
         samesite="lax",
+        secure=True,
     )
+    response.delete_cookie("oauth_state")
     return response
 
 

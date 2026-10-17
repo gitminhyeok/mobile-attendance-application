@@ -5,7 +5,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from database import get_db
 from logic import check_ip, check_attendance_time, get_current_kst_time, get_client_ip
-from dependencies import get_current_user_uid, require_authenticated
+from dependencies import get_current_user_uid, require_approved
 from firebase_admin import firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
 
@@ -17,7 +17,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 @router.post("/attendance")
 @limiter.limit("10/minute")
-async def mark_attendance(request: Request, uid: str = Depends(require_authenticated)):
+async def mark_attendance(request: Request, uid: str = Depends(require_approved)):
     # 1. CSRF check: require custom header from JS fetch
     if request.headers.get("X-Requested-With") != "XMLHttpRequest":
         return JSONResponse(status_code=403, content={"message": "잘못된 요청입니다."})

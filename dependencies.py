@@ -4,6 +4,7 @@ from typing import Optional
 from fastapi import Request, HTTPException
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from dotenv import load_dotenv
+from database import get_db
 
 load_dotenv()
 
@@ -51,6 +52,27 @@ def require_authenticated(request: Request) -> str:
     uid = get_current_user_uid(request)
     if not uid:
         raise HTTPException(status_code=401, detail="로그인이 필요합니다.")
+    return uid
+
+
+def require_approved(request: Request) -> str:
+    """FastAPI dependency: require an authenticated user whose membership is
+    approved. Keeps pending/withdrawn members (with a still-valid cookie)
+    away from member data and attendance marking."""
+    uid = require_authenticated(request)
+    db = get_db()
+    if not db:
+        raise HTTPException(status_code=500, detail="Database error")
+
+    doc = db.collection("users").document(uid).get()
+    if not doc.exists:
+        raise HTTPException(status_code=403, detail="승인된 회원만 이용할 수 있습니다.")
+    data = doc.to_dict() or {}
+    # Same fallback semantics as the rest of the app: legacy docs without
+    # is_auth fall back to status, defaulting to approved.
+    is_auth = data.get("is_auth") or data.get("status", "approved")
+    if is_auth != "approved":
+        raise HTTPException(status_code=403, detail="승인된 회원만 이용할 수 있습니다.")
     return uid
 
 

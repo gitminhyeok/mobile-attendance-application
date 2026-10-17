@@ -2,7 +2,7 @@ import os
 import logging
 import calendar
 from datetime import datetime, timedelta, time
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from database import get_db
@@ -10,7 +10,7 @@ from logic import (
     check_ip, check_attendance_time, get_current_kst_time, get_client_ip,
     purge_expired_unnotified, DROPOUT_DAYS, WARNING_DAYS, ACTIVE_DAYS,
 )
-from dependencies import get_current_user_uid, ADMIN_UIDS
+from dependencies import get_current_user_uid, require_approved, ADMIN_UIDS
 from google.cloud.firestore_v1.base_query import FieldFilter
 
 logger = logging.getLogger(__name__)
@@ -84,8 +84,7 @@ def get_ranking_data(db, target_date, valid_days_count, uid):
 
 
 @router.get("/api/ranking")
-async def get_ranking_api(request: Request, year: int, month: int):
-    uid = get_current_user_uid(request)
+async def get_ranking_api(request: Request, year: int, month: int, uid: str = Depends(require_approved)):
     db = get_db()
 
     try:
@@ -186,11 +185,7 @@ def get_calendar_data(db, uid, target_date):
 
 
 @router.get("/api/record/calendar")
-async def get_record_calendar_api(request: Request, year: int, month: int):
-    uid = get_current_user_uid(request)
-    if not uid:
-        return JSONResponse(status_code=401, content={"message": "Unauthorized"})
-
+async def get_record_calendar_api(request: Request, year: int, month: int, uid: str = Depends(require_approved)):
     db = get_db()
     try:
         target_date = datetime(year, month, 1)
@@ -310,7 +305,9 @@ async def read_root(request: Request):
             if unnotified_date1: unnotified_count += 1
             if unnotified_date2: unnotified_count += 1
 
-            if is_auth == "pending":
+            # Any non-approved state (pending, withdrawn) gets the waiting
+            # screen and no member data, even with a still-valid cookie
+            if is_auth != "approved":
                 is_pending = True
 
         # Only fetch data if NOT pending
