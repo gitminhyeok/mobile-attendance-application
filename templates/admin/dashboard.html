@@ -253,7 +253,7 @@
                             <td class="py-4 pr-2">
                                 <textarea id="memo-{{ user.uid }}" rows="2" maxlength="{{ memo_max_length }}" placeholder="{{ memo_max_length }}자 이내"
                                     oninput="styleMemoBox(this)"
-                                    class="{{ 'bg-teal-50 border-teal-300' if user.memo else 'bg-gray-50 border-gray-200' }} border text-gray-800 text-xs text-center rounded-lg focus:ring-black focus:border-black block w-44 p-2 placeholder-shown:pt-4 placeholder-shown:pb-0 resize-none">{{ user.memo }}</textarea>
+                                    class="{{ 'bg-orange-50 border-orange-300' if user.memo else 'bg-gray-50 border-gray-200' }} border text-gray-800 text-xs text-center rounded-lg focus:ring-black focus:border-black block w-44 p-2 placeholder-shown:pt-4 placeholder-shown:pb-0 resize-none">{{ user.memo }}</textarea>
                             </td>
                             <td class="py-4 text-center">
                                 <span class="text-xs font-bold {{ 'text-red-500' if user.days_absent >= warning_days else 'text-gray-500' }}">
@@ -314,7 +314,7 @@
                         <div class="flex items-center justify-end mt-1 gap-1">
                             {% if user.is_sick_leave %}<span class="w-2 h-2 bg-blue-500 rounded-full"></span>{% endif %}
                             {% if user.unnotified_count > 0 %}<span class="w-2 h-2 bg-red-500 rounded-full"></span>{% endif %}
-                            {% if user.memo %}<span class="w-2 h-2 bg-teal-400 rounded-full"></span>{% endif %}
+                            {% if user.memo %}<span class="w-2 h-2 bg-orange-400 rounded-full"></span>{% endif %}
                             <i data-lucide="chevron-right" class="w-4 h-4 text-gray-300"></i>
                         </div>
                     </div>
@@ -796,7 +796,7 @@
     function styleMemoBox(el) {
         const filled = el.value.trim() !== '';
         ['bg-gray-50', 'border-gray-200'].forEach(c => el.classList.toggle(c, !filled));
-        ['bg-teal-50', 'border-teal-300'].forEach(c => el.classList.toggle(c, filled));
+        ['bg-orange-50', 'border-orange-300'].forEach(c => el.classList.toggle(c, filled));
     }
 
     function closeEditModal() {
