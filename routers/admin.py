@@ -166,6 +166,10 @@ async def update_user_info(
     if memo is not None:
         update_data["memo"] = memo
 
+    # Same for the 운영진 flag: the approval flow doesn't send it
+    if "is_staff" in form:
+        update_data["is_staff"] = str(form.get("is_staff")).lower() == "true"
+
     if is_auth:
         update_data["is_auth"] = is_auth.strip()
 
@@ -271,6 +275,7 @@ async def admin_dashboard(request: Request):
             "unnotified_count": unnotified_count,
             "is_sick_leave": is_sick_leave,
             "is_auth": is_auth,
+            "is_staff": bool(user_data.get("is_staff", False)),
             "memo": memo
         }
 
@@ -336,6 +341,13 @@ async def admin_dashboard(request: Request):
         "dropout_list": dropout_list,
         "sick_list": sick_list,
         "all_users_list": all_users_list,
+        # 전체 멤버 관리 is split into 운영진 first, then everyone else as 회원
+        "member_groups": [
+            {"label": "운영진", "is_staff": True,
+             "users": [u for u in all_users_list if u["is_staff"]]},
+            {"label": "회원", "is_staff": False,
+             "users": [u for u in all_users_list if not u["is_staff"]]},
+        ],
         "pending_list": pending_list,
         "batch_list": batch_list,
         "total_warning": len(warning_list),
